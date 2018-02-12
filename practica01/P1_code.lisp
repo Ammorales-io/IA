@@ -2,21 +2,7 @@
 ;; Ejercicio 2 ;;
 ;;;;;;;;;;;;;;;;;
 
-
-
 ;; 2.1
-;;
-;; Finds a root of f between the points a and b using bisection.
-;;
-;; If f(a)f(b)>0 there is no guarantee that there will be a root in the
-;; interval, and the function will return NIL.
-;;
-;; f: function of a single real parameter with real values whose root
-;; we want to find
-;; a: lower extremum of the interval in which we search for the root
-;; b: b>a upper extremum of the interval in which we search for the root
-;; tol: tolerance for the stopping criterion: if b-a < tol the function
-;; returns (a+b)/2 as a solution.
 (defun bisect (f a b tol)
 	;Genera f(x) en en ámbito de la ejecución actual de la función de bisectriz
 	(let ((fx (/ (+ a b) 2)))
@@ -30,9 +16,6 @@
 				;Si no, reposicionamos uno de los puntos como f(x) y continuamos.
 				(bisect f a fx tol)
 				(bisect f fx b tol))))))
-
-
-
 
 
 ;;;;;;;;;;;;;;;;;
