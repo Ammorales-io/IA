@@ -2,6 +2,8 @@
 ;; Ejercicio 2 ;;
 ;;;;;;;;;;;;;;;;;
 
+
+
 ;; 2.1
 ;;
 ;; Finds a root of f between the points a and b using bisection.
@@ -18,14 +20,19 @@
 (defun bisect (f a b tol)
 	;Genera f(x) en en ámbito de la ejecución actual de la función de bisectriz
 	(let ((fx (/ (+ a b) 2)))
-	(if (> (* a b) 0)
-		;Si a y b son ambas positivas o neativas, devuelve NILL
+	(if (> (* (funcall f a) (funcall f b)) 0)
+		;Si f(a) y f(b) son ambas positivas o neativas, devuelve NILL
 		nil
-		(if (< (- b a) tol)
+		(if (< (- (funcall f b) (funcall f a)) tol)
+			;Si f(b) - f(a) < tol, la función devuelve f(x) como resultado
 			fx
 			(if (> fx 0)
+				;Si no, reposicionamos uno de los puntos como f(x) y continuamos.
 				(bisect f a fx tol)
 				(bisect f fx b tol))))))
+
+
+
 
 
 ;;;;;;;;;;;;;;;;;
