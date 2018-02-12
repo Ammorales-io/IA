@@ -17,6 +17,16 @@
 				(bisect f a fx tol)
 				(bisect f fx b tol))))))
 
+;;2.2
+(defun allroot (f lst tol)
+	(if (null (rest lst))
+		;Si no quedan, al menos, dos números en la lista, la recursividad termina
+		nil
+		;Calcula la bisectriz de los dos primeros elementos de la lista y pasa a 
+		;llamada recursiva la lista quitando el primer elemento 
+		(cons (bisect f (first lst) (rest lst) tol) (allroot f (rest lst) tol))))
+
+
 
 ;;;;;;;;;;;;;;;;;
 ;; Ejercicio 3 ;;
