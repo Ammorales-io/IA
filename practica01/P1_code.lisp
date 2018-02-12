@@ -9,12 +9,15 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;
-;;; EJERCICIO 1
-;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 1.1
-;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;  EJERCICIO 1  ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;
+;;;	Apartado 1.1 ;;;
+;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; prod-escalar-rec (x y)
@@ -79,9 +82,10 @@
 		nil
 		(/ (prod-escalar-mapcar x y) (* (sqrt (prod-escalar-mapcar x x)) (sqrt (prod-escalar-mapcar y y))))))
 
-;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 1.2
-;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;
+;;;	Apartado 1.2 ;;;
+;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; crea-vectores-conf (cat vs conf)
@@ -117,9 +121,10 @@
 (defun sc-conf (cat vs conf)
 	(sort (copy-list (crea-vectores-conf cat vs conf)) #'> :key (lambda (x) (sc-rec x cat))))
 
-;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 1.3
-;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;
+;;;	Apartado 1.3 ;;;
+;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; crea-vectores-class (cats texts func)
@@ -173,13 +178,31 @@
 		; todos los elementos del vector de vectores texts
 		(list (select-vector-class (first cats) texts func) (select-vector-class (first (rest cats)) texts func))))
 
-;;;;;;;;;;;;;;;;;;;
-;;; EJERCICIO 2
-;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 2.1 
-;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;  EJERCICIO 2  ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;
+;;;	Apartado 2.1 ;;;
+;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; bisect (f a b tol)
+;;;
+;;; Calcula la raiz de una función dada en un intervalo dado mediante 
+;;; la técnica de la bisección a partir de un punto de tolerancia
+;;; determinado.
+;;;
+;;; INPUT:	f: Función de la que calcular la raiz
+;;; 		a: Mínimo del intervalo
+;;;			b: Máximo del intervalo
+;;;			tol: Resultado mínimo para aceptar un resultado 
+;;; OUTPUT: Raiz de la función en el intervalo establecido
+;;;
 (defun bisect (f a b tol)
 	;Genera x en en ámbito de la ejecución actual de la función de bisectriz
 	(let ((x (/ (+ a b) 2)))
@@ -196,9 +219,21 @@
 				(bisect f x b tol))))))
 
 
-;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 2.2 
-;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;
+;;;	Apartado 2.2 ;;;
+;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; alrrot (f lst tol)
+;;;
+;;; Calcula la raiz de una función dada en cada par de intervalos
+;;; consecutivos de una lista ordenada
+;;;
+;;; INPUT:	f: Función de la que calcular la raiz
+;;; 		lst: Listado de intervalos
+;;;			tol: Resultado mínimo para aceptar un resultado 
+;;; OUTPUT: Listado de las raices de la función en los intervalos establecidos
+;;;
 (defun allroot (f lst tol)
 	(if (null (rest lst))
 		;Si no quedan al menos dos números en la lista, la recursividad termina
@@ -214,40 +249,110 @@
 			(allroot f (rest lst) tol))))
 
 
-;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 2.3
-;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;
+;;;	Apartado 2.3 ;;;
+;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; make-interval-list (a b i)
+;;;
+;;; Crea la lista de números entre a y b a distancia i
+;;;
+;;; INPUT:	a: Mínimo del intervalo
+;;; 		b: Máximo del intervalo
+;;;			i: Distancia entre elementos
+;;; OUTPUT: lista de números entre a y b a distancia i
+;;;
 (defun make-interval-list (a b i)
 		;En la comparación usamos b+i/2 como un sobrepaso a errores por decimales
 		;que hacía que a, al llegar a b, fuera ligeramente mayor que b y no
 		;registrase el último número de la lista
 		(if (> a (+ b (/ i 2)))
 			nil
-			
 			(cons a (make-interval-list (+ a i) b i))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; allind (f a b N tol)
+;;;
+;;; Calcula todas las raices de una función en los valores establecidos
+;;; entre los subintervalos de un intervalo dado.
+;;;
+;;; INPUT:	f: Función de la que calcular las raices
+;;; 		a: Mínimo del intervalo principal
+;;;			b: Máximo del intervalo principal
+;;;			N: Valor que, siendo exponente de 2, se usará para divir el inervalo
+;;;				principal en sub-intervalos
+;;;			tol: Resultado mínimo para aceptar un resultado 
+;;; OUTPUT: Listado de las raices de la función en los intervalos establecidos
+;;;
 (defun allind (f a b N tol)
+	; Aunque se podría itroducir directamente el contenido de interval-lst en allroot,
+	; hemos optado por crear una variable local para aumentar la claridad del código.
+	; A.K.A.: #NoALosChurros
 	(let ((interval-lst (make-interval-list a b (/ (+ (abs b) (abs a)) (expt 2 N)))))
 		(allroot f interval-lst tol)))
 	
 
-;;;;;;;;;;;;;;;;;;;
-;;; EJERCICIO 3
-;;;;;;;;;;;;;;;;;;;
 
-;; 3.1
-(defun combine-elt-list (elt lst)
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;  EJERCICIO 3  ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;
+;;;	Apartado 3.1 ;;;
+;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; combine-elt-lst (elt lst)
+;;;
+;;; Genera un listado con la combinación de un átomo con todos los
+;;; átomos de un listado.
+;;;
+;;; INPUT:	elt: Átomo a combinar
+;;; 		lst: Listado a combinar
+;;; OUTPUT: Listado con todas las combinaciones del átomo y los elementos del listado
+;;;
+(defun combine-elt-lst (elt lst)
 	(if (null lst)
 		nil
-		(cons (list elt (first lst)) (combine-elt-list elt (rest lst)))))
+		(cons (list elt (first lst)) (combine-elt-lst elt (rest lst)))))
 
-;; 3.2
+
+;;;;;;;;;;;;;;;;;;;;
+;;;	Apartado 3.2 ;;;
+;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; combine-lst-lst (lst1 lst2)
+;;;
+;;; Genera un listado con el producto cartesiano de elementos de dos
+;;; listas dadas.
+;;;
+;;; INPUT:	lst1: Lista a combinar
+;;; 		lst2: Lista a combinar
+;;; OUTPUT: Listado con el producto cartesiano de los elementos de ambos listados
+;;;
 (defun combine-lst-lst (lst1 lst2)
 	(unless (or (null lst1) (null lst2))
 		nil
-	(append (combine-elt-list (first lst1) lst2) (combine-lst-lst (rest lst1) lst2))))
+	(append (combine-elt-lst (first lst1) lst2) (combine-lst-lst (rest lst1) lst2))))
 
-;; 3.3
+
+;;;;;;;;;;;;;;;;;;;;
+;;;	Apartado 3.3 ;;;
+;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; combine-list-of-lst (lstolsts)
+;;;
+;;; Genera el producto cartesiano de los elementos de los sublistados
+;;; facilitados mediante un listado.
+;;;
+;;; INPUT:	lstolsts: listado con los sublistados
+;;; OUTPUT: Listado con el producto cartesiano de los elementos de los sublistados
+;;;
 (defun combine-list-of-lsts (lstolsts)
 	(if (null (rest lstolsts))
 		(first lstolsts)
