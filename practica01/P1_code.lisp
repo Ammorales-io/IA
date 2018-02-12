@@ -176,13 +176,14 @@
 ;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 2
 ;;;;;;;;;;;;;;;;;;;
+
 ;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 2.1 (Mi modificación)
+;;;	Apartado 2.1 
 ;;;;;;;;;;;;;;;;;;;
 (defun bisect (f a b tol)
 	;Genera x en en ámbito de la ejecución actual de la función de bisectriz
 	(let ((x (/ (+ a b) 2)))
-	(if (>= (* (funcall f a) (funcall f b)) 0)
+	(if (> (* (funcall f a) (funcall f b)) 0)
 		;Si f(a) y f(b) son ambas positivas o negativas, devuelve NIL
 		nil
 		(if (< (- b a) tol)
@@ -194,25 +195,9 @@
 				(bisect f a x tol)
 				(bisect f x b tol))))))
 
-;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 2.1 (Funcion de Amartinez-h)
-;;;;;;;;;;;;;;;;;;;
-(defun bisect (f a b tol)
-	;Genera f(x) en en ámbito de la ejecución actual de la función de bisectriz
-	(let ((fx (/ (+ a b) 2)))
-	(if (> (* (funcall f a) (funcall f b)) 0)
-		;Si f(a) y f(b) son ambas positivas o neativas, devuelve NILL
-		nil
-		(if (< (- (funcall f b) (funcall f a)) tol)
-			;Si f(b) - f(a) < tol, la función devuelve f(x) como resultado
-			fx
-			(if (> fx 0)
-				;Si no, reposicionamos uno de los puntos como f(x) y continuamos.
-				(bisect f a fx tol)
-				(bisect f fx b tol))))))
 
 ;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 2.2 (Mi modificación)
+;;;	Apartado 2.2 
 ;;;;;;;;;;;;;;;;;;;
 (defun allroot (f lst tol)
 	(if (null (rest lst))
@@ -228,35 +213,23 @@
 			;elementos de la lista
 			(allroot f (rest lst) tol))))
 
+
 ;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 2.2 (Funcion de Amartinez-h)
+;;;	Apartado 2.3
 ;;;;;;;;;;;;;;;;;;;
-(defun allroot (f lst tol)
-	(if (null (rest lst))
-		;Si no quedan, al menos, dos números en la lista, la recursividad termina
-		nil
-		;Calcula la bisectriz de los dos primeros elementos de la lista y pasa a 
-		;llamada recursiva la lista quitando el primer elemento 
-		(cons (bisect f (first lst) (rest lst) tol) (allroot f (rest lst) tol))))
-	
-;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 2.3 (EN CONSTRUCCION)
-;;;;;;;;;;;;;;;;;;;
+(defun make-interval-list (a b i)
+		;En la comparación usamos b+i/2 como un sobrepaso a errores por decimales
+		;que hacía que a, al llegar a b, fuera ligeramente mayor que b y no
+		;registrase el último número de la lista
+		(if (> a (+ b (/ i 2)))
+			nil
+			
+			(cons a (make-interval-list (+ a i) b i))))
+
 (defun allind (f a b N tol)
-	;Calcula el delimitador de cada seccion del intervalo
-	(let ((i (/ (- b a) N)))
-	(find-roots f a (+ a i) a i N tol)))
+	(let ((interval-lst (make-interval-list a b (/ (+ (abs b) (abs a)) (expt 2 N)))))
+		(allroot f interval-lst tol)))
 	
-
-(defun find-roots (f a b st i N tol)
-	;Comprueba si se ha alcanzado la ultima seccion del intervalo
-	(if (= b (+ st (* N i) 1))
-		nil
-		(cons (bisect f a b tol) (find-roots f b (+ b i) st i N tol))))
-
-
-(defvar fseno)
-(setf fseno (lambda(x) (sin (* 6.28 x))))
 
 ;;;;;;;;;;;;;;;;;;;
 ;;; EJERCICIO 3
