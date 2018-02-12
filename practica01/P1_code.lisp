@@ -345,7 +345,8 @@
 ;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; combine-list-of-lst (lstolsts)
+;;; combine-list-of-lst (lstolsts) 
+;;;	!Warning: Incompleta, el resultado conseguido no es correcto aun
 ;;;
 ;;; Genera el producto cartesiano de los elementos de los sublistados
 ;;; facilitados mediante un listado.
