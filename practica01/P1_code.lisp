@@ -337,12 +337,23 @@
 (defun combine-lst-lst (lst1 lst2)
 	(unless (or (null lst1) (null lst2))
 		nil
-	(append (combine-elt-lst (first lst1) lst2) (combine-lst-lst (rest lst1) lst2))))
+		(append (combine-elt-lst (first lst1) lst2) (combine-lst-lst (rest lst1) lst2))))
 
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;;	Apartado 3.3 ;;;
 ;;;;;;;;;;;;;;;;;;;;
+
+
+(defun combine-elt-lst-3.3 (elt lst)
+	(if (null lst)
+		nil
+		(cons (append (list elt) (first lst)) (combine-elt-lst-3.3 elt (rest lst)))))
+
+(defun combine-lst-lst-3.3 (lst1 lst2)
+	(unless (or (null lst1) (null lst2))
+		nil
+		(append (combine-elt-lst-3.3 (first lst1) lst2) (combine-lst-lst-3.3 (rest lst1) lst2))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; combine-list-of-lst (lstolsts) 
@@ -357,5 +368,5 @@
 (defun combine-list-of-lsts (lstolsts)
 	(if (null (rest lstolsts))
 		(first lstolsts)
-		(combine-lst-lst (first lstolsts) (combine-list-of-lsts (rest lstolsts)))))
+		(combine-lst-lst-3.3 (first lstolsts) (combine-list-of-lsts (rest lstolsts)))))
 	
