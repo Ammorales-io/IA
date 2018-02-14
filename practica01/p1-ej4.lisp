@@ -40,10 +40,9 @@
 ;;            NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun positive-literal-p (x)
-  ;;
-  ;; 4.1.1 Completa el codigo
-  ;;
-  )
+	;Comprueba si x es un atomo y no se ha declarado
+	;como conector, o como NIL o T directamente
+	(and (atom x) (not (equal x nil)) (not (equal x t)) (not (connector-p x))))
 
 ;; EJEMPLOS:
 (positive-literal-p 'p)
@@ -68,10 +67,10 @@
 ;;            NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun negative-literal-p (x)
-  ;;
-  ;; 4.1.2 Completa el codigo
-  ;;
-  )
+	;Comprueba si x es una lista de 2 elementos, 
+	;siendo el primero el conector NOT 
+	;y el segundo un literal positivo
+	(and (listp x) (unary-connector-p (first x)) (positive-literal-p (second x))))
 
 ;; EJEMPLOS:
 (negative-literal-p '(¬ p))        ; T
@@ -97,10 +96,8 @@
 ;;            NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun literal-p (x) 
-  ;;
-  ;; 4.1.3 Completa el codigo
-  ;;
-  )
+	;Comprueba si x es un literal positivo o negativo
+	(or (positive-literal-p x) (negative-literal-p x)))
 
 ;; EJEMPLOS:
 (literal-p 'p)             
