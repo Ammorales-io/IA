@@ -3,7 +3,7 @@
 ;;;   PRACTICA 1
 ;;;
 ;;;   Autores: Celia San Gregorio Moreno
-;;;			   Alvaro Martinez Morales
+;;;            Alvaro Martinez Morales
 ;;;
 ;;;   Grupo: 2363
 ;;;
@@ -16,7 +16,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 1.1 ;;;
+;;; Apartado 1.1 ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -30,9 +30,9 @@
 ;;; OUTPUT: producto escalar de x e y
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun prod-escalar-rec (x y)
-	(if (or (null x) (null y))
-		0
-		(+ (* (first x) (first y)) (prod-escalar-rec (rest x) (rest y)))))
+  (if (or (null x) (null y))
+      0
+    (+ (* (first x) (first y)) (prod-escalar-rec (rest x) (rest y)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; sc-rec (x y)
@@ -47,9 +47,9 @@
 ;;; OUTPUT: similitud coseno entre x e y
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun sc-rec (x y)
-	(if (or (= (prod-escalar-rec x x) 0) (= (prod-escalar-rec y y) 0))
-		nil
-		(/ (prod-escalar-rec x y) (* (sqrt (prod-escalar-rec x x)) (sqrt (prod-escalar-rec y y))))))
+  (if (or (= (prod-escalar-rec x x) 0) (= (prod-escalar-rec y y) 0))
+      nil
+    (/ (prod-escalar-rec x y) (* (sqrt (prod-escalar-rec x x)) (sqrt (prod-escalar-rec y y))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; prod-escalar-mapcar (x y)
@@ -62,9 +62,9 @@
 ;;; OUTPUT: producto escalar de x e y
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun prod-escalar-mapcar (x y)
-	(if (or (null x) (null y))
-		nil
-		 (reduce #'+ (mapcar #'* x y))))
+  (if (or (null x) (null y))
+      nil
+    (reduce #'+ (mapcar #'* x y))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; sc-mapcar (x y)
@@ -78,13 +78,13 @@
 ;;; 	   y: vector, representado como una lista
 ;;; OUTPUT: similitud coseno entre x e y
 (defun sc-mapcar (x y)
-	(if (or (= (prod-escalar-mapcar x x) 0) (= (prod-escalar-mapcar y y) 0))
-		nil
-		(/ (prod-escalar-mapcar x y) (* (sqrt (prod-escalar-mapcar x x)) (sqrt (prod-escalar-mapcar y y))))))
+  (if (or (= (prod-escalar-mapcar x x) 0) (= (prod-escalar-mapcar y y) 0))
+      nil
+    (/ (prod-escalar-mapcar x y) (* (sqrt (prod-escalar-mapcar x x)) (sqrt (prod-escalar-mapcar y y))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 1.2 ;;;
+;;; Apartado 1.2 ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -99,14 +99,14 @@
 ;;; OUTPUT: Vectores cuya similitud con respecto a la categoría es superior al
 ;;; nivel de confianza. No están ordenados.
 (defun crea-vectores-conf (cat vs conf)
-	(if (null vs)
-		nil
-		; Comprueba que la similitud coseno no es NIL 
-		; y que es mayor que el parametro conf
-		(if (and (not (null (sc-rec cat (first vs)))) (> (sc-rec cat (first vs)) conf))
-			(append (list (first vs)) (crea-vectores-conf cat (rest vs) conf))
-		; Si no es mayor que conf, sigue evaluando vs
-			(crea-vectores-conf cat (rest vs) conf))))
+  (if (null vs)
+      nil
+    ; Comprueba que la similitud coseno no es NIL 
+    ; y que es mayor que el parametro conf
+    (if (and (not (null (sc-rec cat (first vs)))) (> (sc-rec cat (first vs)) conf))
+        (append (list (first vs)) (crea-vectores-conf cat (rest vs) conf))
+      ; Si no es mayor que conf, sigue evaluando vs
+      (crea-vectores-conf cat (rest vs) conf))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; sc-conf (cat vs conf)
@@ -119,11 +119,11 @@
 ;;; OUTPUT: Vectores cuya similitud con respecto a la categoría es superior al
 ;;; nivel de confianza, ordenados
 (defun sc-conf (cat vs conf)
-	(sort (copy-list (crea-vectores-conf cat vs conf)) #'> :key (lambda (x) (sc-rec x cat))))
+  (sort (copy-list (crea-vectores-conf cat vs conf)) #'> :key (lambda (x) (sc-rec x cat))))
 
 
 ;;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 1.3 ;;;
+;;; Apartado 1.3 ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -140,11 +140,11 @@
 ;;; OUTPUT: Pares identificador de categoría con resultado de similitud coseno, sin ordenar
 ;;;
 (defun crea-vectores-class (cats texts func)
-	(if (null texts)
-		nil
-		; Crea pares (id_categoria similitud_coseno) con la categoria
-		; pasada como argumento y cada elemento del vector de vectores texts
-		(append (list (list (first cats) (funcall func (rest cats) (rest (first texts))))) (crea-vectores-class cats (rest texts) func))))
+  (if (null texts)
+      nil
+    ; Crea pares (id_categoria similitud_coseno) con la categoria
+    ; pasada como argumento y cada elemento del vector de vectores texts
+    (append (list (list (first cats) (funcall func (rest cats) (rest (first texts))))) (crea-vectores-class cats (rest texts) func))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;sc;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; select-vector-class (cats texts func)
@@ -159,7 +159,7 @@
 ;;; OUTPUT: Pares identificador de categoría con resultado de similitud coseno, sin ordenar
 ;;;
 (defun select-vector-class (cats texts func)
-	(first (sort (copy-list (crea-vectores-class cats texts func)) #'> :key #'second)))
+  (first (sort (copy-list (crea-vectores-class cats texts func)) #'> :key #'second)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; sc-classifier (cats texts func)
@@ -172,11 +172,11 @@
 ;;; OUTPUT: Pares identificador de categoría con resultado de similitud coseno
 ;;;
 (defun sc-classifier (cats texts func)
-	(if (or (null cats) (null texts))
-		nil
-		; Comprueba la similitud coseno de cada vector categoria con
-		; todos los elementos del vector de vectores texts
-		(list (select-vector-class (first cats) texts func) (select-vector-class (first (rest cats)) texts func))))
+  (if (or (null cats) (null texts))
+      nil
+    ; Comprueba la similitud coseno de cada vector categoria con
+    ; todos los elementos del vector de vectores texts
+    (list (select-vector-class (first cats) texts func) (select-vector-class (first (rest cats)) texts func))))
 
 
 
@@ -187,7 +187,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 2.1 ;;;
+;;; Apartado 2.1 ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -204,23 +204,23 @@
 ;;; OUTPUT: Raiz de la función en el intervalo establecido
 ;;;
 (defun bisect (f a b tol)
-	;Genera x en en ámbito de la ejecución actual de la función de bisectriz
-	(let ((x (/ (+ a b) 2)))
-	(if (> (* (funcall f a) (funcall f b)) 0)
-		;Si f(a) y f(b) son ambas positivas o negativas, devuelve NIL
-		nil
-		(if (< (- b a) tol)
-			;Si b - a < tol, la función devuelve x como resultado
-			x
-			; Si f(a) * f(x) < 0, la función busca en [a, x]
-			(if (< (* (funcall f a) (funcall f x)) 0)
-				;Si no, reposicionamos uno de los puntos como x y continuamos.
-				(bisect f a x tol)
-				(bisect f x b tol))))))
+  ;Genera x en en ámbito de la ejecución actual de la función de bisectriz
+  (let ((x (/ (+ a b) 2)))
+    (if (> (* (funcall f a) (funcall f b)) 0)
+        ;Si f(a) y f(b) son ambas positivas o negativas, devuelve NIL
+        nil
+      (if (< (- b a) tol)
+          ;Si b - a < tol, la función devuelve x como resultado
+          x
+        ; Si f(a) * f(x) < 0, la función busca en [a, x]
+        (if (< (* (funcall f a) (funcall f x)) 0)
+            ;Si no, reposicionamos uno de los puntos como x y continuamos.
+            (bisect f a x tol)
+          (bisect f x b tol))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 2.2 ;;;
+;;; Apartado 2.2 ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -235,22 +235,22 @@
 ;;; OUTPUT: Listado de las raices de la función en los intervalos establecidos
 ;;;
 (defun allroot (f lst tol)
-	(if (null (rest lst))
-		;Si no quedan al menos dos números en la lista, la recursividad termina
-		nil
-		;Comprueba si el signo de f(lst[i]) y f(lst[i+1]) es distinto. 
-		;Es decir, que  f(lst[i]) * f(lst[i+1]) < 0
-		(if (< (* (funcall f (first lst)) (funcall f (second lst))) 0)
-			;Calcula la bisectriz de los dos primeros elementos de la lista y pasa 
-			;la lista a la llamada recursiva, quitando el primer elemento 
-			(cons (bisect f (first lst) (second lst) tol) (allroot f (rest lst) tol))
-			;Si no se cumple la condición, continúa evaluando los
-			;elementos de la lista
-			(allroot f (rest lst) tol))))
+  (if (null (rest lst))
+      ;Si no quedan al menos dos números en la lista, la recursividad termina
+      nil
+    ;Comprueba si el signo de f(lst[i]) y f(lst[i+1]) es distinto. 
+    ;Es decir, que  f(lst[i]) * f(lst[i+1]) < 0
+    (if (< (* (funcall f (first lst)) (funcall f (second lst))) 0)
+        ;Calcula la bisectriz de los dos primeros elementos de la lista y pasa 
+        ;la lista a la llamada recursiva, quitando el primer elemento 
+        (cons (bisect f (first lst) (second lst) tol) (allroot f (rest lst) tol))
+      ;Si no se cumple la condición, continúa evaluando los
+      ;elementos de la lista
+      (allroot f (rest lst) tol))))
 
 
 ;;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 2.3 ;;;
+;;; Apartado 2.3 ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -264,12 +264,12 @@
 ;;; OUTPUT: lista de números entre a y b a distancia i
 ;;;
 (defun make-interval-list (a b i)
-		;En la comparación usamos b+i/2 como un sobrepaso a errores por decimales
-		;que hacía que a, al llegar a b, fuera ligeramente mayor que b y no
-		;registrase el último número de la lista
-		(if (> a (+ b (/ i 2)))
-			nil
-			(cons a (make-interval-list (+ a i) b i))))
+  ;En la comparación usamos b+i/2 como un sobrepaso a errores por decimales
+  ;que hacía que a, al llegar a b, fuera ligeramente mayor que b y no
+  ;registrase el último número de la lista
+  (if (> a (+ b (/ i 2)))
+      nil
+    (cons a (make-interval-list (+ a i) b i))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; allind (f a b N tol)
@@ -286,10 +286,10 @@
 ;;; OUTPUT: Listado de las raices de la función en los intervalos establecidos
 ;;;
 (defun allind (f a b N tol)
-	; Aunque se podría itroducir directamente el contenido de interval-lst en allroot,
-	; hemos optado por crear una variable local para aumentar la claridad del código.
-	; A.K.A.: #NoALosChurros
-	(let ((interval-lst (make-interval-list a b (/ (+ (abs b) (abs a)) (expt 2 N)))))
+  ; Aunque se podría itroducir directamente el contenido de interval-lst en allroot,
+  ; hemos optado por crear una variable local para aumentar la claridad del código.
+  ; A.K.A.: #NoALosChurros
+  (let ((interval-lst (make-interval-list a b (/ (+ (abs b) (abs a)) (expt 2 N)))))
 		(allroot f interval-lst tol)))
 	
 
@@ -301,7 +301,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 3.1 ;;;
+;;; Apartado 3.1 ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -315,13 +315,13 @@
 ;;; OUTPUT: Listado con todas las combinaciones del átomo y los elementos del listado
 ;;;
 (defun combine-elt-lst (elt lst)
-	(if (null lst)
-		nil
-		(cons (list elt (first lst)) (combine-elt-lst elt (rest lst)))))
+  (if (null lst)
+      nil
+    (cons (list elt (first lst)) (combine-elt-lst elt (rest lst)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 3.2 ;;;
+;;; Apartado 3.2 ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -335,25 +335,17 @@
 ;;; OUTPUT: Listado con el producto cartesiano de los elementos de ambos listados
 ;;;
 (defun combine-lst-lst (lst1 lst2)
-	(unless (or (null lst1) (null lst2))
-		nil
-		(append (combine-elt-lst (first lst1) lst2) (combine-lst-lst (rest lst1) lst2))))
+  (unless (or (null lst1) (null lst2))
+    nil
+    (append (combine-elt-lst (first lst1) lst2) (combine-lst-lst (rest lst1) lst2))))
 
 
 ;;;;;;;;;;;;;;;;;;;;
-;;;	Apartado 3.3 ;;;
+;;; Apartado 3.3 ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
 
-(defun combine-elt-lst-3.3 (elt lst)
-	(if (null lst)
-		nil
-		(cons (append (list elt) (first lst)) (combine-elt-lst-3.3 elt (rest lst)))))
 
-(defun combine-lst-lst-3.3 (lst1 lst2)
-	(unless (or (null lst1) (null lst2))
-		nil
-		(append (combine-elt-lst-3.3 (first lst1) lst2) (combine-lst-lst-3.3 (rest lst1) lst2))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; combine-list-of-lst (lstolsts) 
@@ -366,10 +358,9 @@
 ;;; OUTPUT: Listado con el producto cartesiano de los elementos de los sublistados
 ;;;
 (defun combine-list-of-lsts (lstolsts)
-	(if (null (rest lstolsts))
-		(first lstolsts)
-		(reduce #'cons (reduce #'append (append (first lstolsts) (combine-list-of-lsts (rest lstolsts)))))))
+  (if (null (rest lstolsts))
+      (first lstolsts)
+    (reduce #'cons (reduce #'append (append (first lstolsts) (combine-list-of-lsts (rest lstolsts)))))))
 
-(combine-list-of-lsts '((a b c) (+ -) (1 2 3 4)))
 
 	
