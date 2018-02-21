@@ -191,8 +191,9 @@
 								 (wff-infix-p (first (rest (rest x))))) ; Comprueba si FBF2 es válida
 
 							; En caso de tener una estructura de tipo (FBFi <conector> FBFi+1 <conector> ... FBFn)
-							(and (wff-infix-p (first x))				; Comprueba si FBF1 es válida
-								 (wff-infix-p (rest (rest x))))))		; Comprueba si (FBFi+1 <conector> ... FBFn) es válida
+							(and (eql (first (rest x)) (first (rest (rest (rest x)))))	; Comprueba si en la estructura no hay dos conectores distintos como: (A ^ B v C)
+								 (wff-infix-p (first x))										; Comprueba si FBF1 es válida
+								 (wff-infix-p (rest (rest x))))))							; Comprueba si (FBFi+1 <conector> ... FBFn) es válida
 					(t NIL))))))
 
 ;;
@@ -207,7 +208,7 @@
 (wff-infix-p '(A => (B <=> C))) 			; T
 (wff-infix-p '( B => (A ^ C ^ D))) 			; T   
 (wff-infix-p '( B => (A ^ C))) 			; T 
-(wff-infix-p '( B ^ (A ^ C))) 			; T 
+(wff-infix-p '( B ^ (A v C))) 			; T 
 (wff-infix-p '((p v (a => (b ^ (~ c) ^ d))) ^ ((p <=> (~ q)) ^ p ) ^ e))  ; T 
 (wff-infix-p nil) 					; NIL
 (wff-infix-p '(a ^)) 					; NIL
