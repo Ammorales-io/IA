@@ -166,35 +166,34 @@
 	(unless (null x)				; NIL no es FBF en formato infijo (por convencion)
 		(or (literal-p x)			; Un literal es FBF en formato infijo
 			(and (listp x)			; En caso de que no sea un literal debe ser una lista
-				(let ((fbf_o_connector (first x))		; FBF1 o ~
-					  (rest_1 (first (rest x)))			; FBF después de ~ o un conector binario/n-ario
-					  (rest_2 (rest (rest x))))			; FBF2
-					(cond
-						; Si el primer elemento es un connector unario ~
-						; deberia tener la estructura (<conector> FBF)
-						((unary-connector-p fbf_o_connector)
-							(and (null rest_2)			; Después de FBF1 no hay "nada" (NIL)
-								 (wff-infix-p rest_1)))
-						; Si el primer elemento es un conector binario =>, <=>
-						; deberia tener la estructura (FBF1 <conector> FBF2)
-						((binary-connector-p rest_1)
-							(and (null (rest rest_2)) 	; Después de FBF2 no hay "nada" (NIL)
-								 (wff-infix-p fbf_o_connector)
-								 (wff-infix-p rest_2)))
+				(cond
+					; Si el primer elemento es un connector unario ~
+					; debería tener la estructura (<conector> FBF)
+					((unary-connector-p (first x))
+						(and (null (rest (rest x)))			; Después de FBF no hay "nada" (NIL)
+							 (wff-infix-p (first (rest x)))))
+					; Si el primer elemento es un conector binario =>, <=>
+					; deberia tener la estructura (FBF1 <conector> FBF2)
+					((binary-connector-p (first (rest x)))
+						(and (null (rest (rest (rest x))))	; Después de FBF2 no hay "nada" (NIL)
+							 (wff-infix-p (first x))
+							 (wff-infix-p (first (rest (rest x))))))
+					; Si el primer elemento es una conjuncion o disyuncion vacias,
+					; (^) (v), no tienen ninguna FBF detrás (NIL)
+					((n-ary-connector-p (first x))
+						(null (rest x)))
+					; Si el primer elemento es un conector enario ^ v, debería
+					; tener la estructura (FBF1 <conector> FBF2 <conector> ... FBFn)
+					((n-ary-connector-p (first (rest x)))
+						; Si llegamos a una estructura de tipo (FBF1 <conector> FBF2)
+						(if (null (rest (rest (rest x))))
+							(and (wff-infix-p (first x))				; Comprueba si FBF1 es válida
+								 (wff-infix-p (first (rest (rest x))))) ; Comprueba si FBF2 es válida
 
-						;; Si el primer elemento es una conjuncion o disyuncion vacias,
-						;; (^) (v), no tienen ninguna FBF detrás (NIL)
-						((n-ary-connector-p fbf_o_connector)
-							(null (rest x)))
-
-						;; Si el primer elemento es un conector enario ^ v,
-						;; deberia tener la estructura (FBF1 <conector> FBF2 <conector> ... FBFn)
-						((n-ary-connector-p rest_1)
-							(if (null (rest x)) ; Caso Base: Sólo nos queda una FBF por analizar
-								(wff-infix-p x)
-								(wff-infix-p rest_2)))
-
-						(t NIL)))))))
+							; En caso de tener una estructura de tipo (FBFi <conector> FBFi+1 <conector> ... FBFn)
+							(and (wff-infix-p (first x))				; Comprueba si FBF1 es válida
+								 (wff-infix-p (rest (rest x))))))		; Comprueba si (FBFi+1 <conector> ... FBFn) es válida
+					(t NIL))))))
 
 ;;
 ;; EJEMPLOS:
@@ -221,7 +220,7 @@
 (wff-infix-p '( => A)) 				      ; NIL   
 (wff-infix-p '(A =>)) 				      ; NIL   
 (wff-infix-p '(A => B <=> C)) 		      ; NIL
-(wff-infix-p '( B => (A ^ C v D))) 		      ; NIL   
+(wff-infix-p '( B => (A ^ C v D))) 		      ; NIL  
 (wff-infix-p '( B ^ C v D )) 			      ; NIL 
 (wff-infix-p '((p v (a => e (b ^ (~ c) ^ d))) ^ ((p <=> (~ q)) ^ p ) ^ e)); NIL 
 
