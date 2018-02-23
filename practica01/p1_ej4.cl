@@ -172,17 +172,17 @@
 					((unary-connector-p (first x))
 						(and (null (rest (rest x)))			; Después de FBF no hay "nada" (NIL)
 							 (wff-infix-p (first (rest x)))))
-					; Si el primer elemento es un conector binario =>, <=>
+					; Si el elemento es un conector binario =>, <=>
 					; deberia tener la estructura (FBF1 <conector> FBF2)
 					((binary-connector-p (first (rest x)))
 						(and (null (rest (rest (rest x))))	; Después de FBF2 no hay "nada" (NIL)
 							 (wff-infix-p (first x))
 							 (wff-infix-p (first (rest (rest x))))))
-					; Si el primer elemento es una conjuncion o disyuncion vacias,
+					; Si el elemento es una conjuncion o disyuncion vacía,
 					; (^) (v), no tienen ninguna FBF detrás (NIL)
 					((n-ary-connector-p (first x))
 						(null (rest x)))
-					; Si el primer elemento es un conector enario ^ v, debería
+					; Si el elemento es un conector enario ^ v, debería
 					; tener la estructura (FBF1 <conector> FBF2 <conector> ... FBFn)
 					((n-ary-connector-p (first (rest x)))
 						; Si llegamos a una estructura de tipo (FBF1 <conector> FBF2)
@@ -280,10 +280,31 @@
 ;; EVALUA A : FBF en formato prefijo 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun infix-to-prefix (wff)
-  ;;
-  ;; 4.1.5 Completa el codigo
-  ;;
-  )
+	(when (wff-infix-p wff)		;Mientras wff sea una FBF
+		(if (literal-p wff)
+			wff					;Caso base: wff es un literal
+			(cond
+				;Si el primer elemento es un connector unario ~
+				;debería tener la estructura (<conector> FBF)
+				((unary-connector-p (first wff))
+				 (list (first wff) (infix-to-prefix (second wff))))
+				;Si el elemento es un conector binario =>, <=>
+				;deberia tener la estructura (FBF1 <conector> FBF2)
+				((binary-connector-p (second wff))
+				 (list (second wff)
+					   (infix-to-prefix (first wff))
+					   (infix-to-prefix (third wff))))
+				; Si el elemento es una conjuncion o disyuncion 
+				; vacía, se evalúa direcamente.
+				((n-ary-connector-p (first wff))
+			     (when (null (rest wff))
+					wff))
+				; Si el elemento es un conector enario ^ v, debería
+				; tener la estructura (FBF1 <conector> FBF2 <conector> ... FBFn)
+				((n-ary-connector-p (second wff))
+				 (let ((rest_wffs (list (first wff) (infix-to-prefix (rest (rest wff)))))) ;Lista de FBFs ya evaluadas y convertidas a formato prefijo
+					(append (second wff) rest_wffs)))	
+				(t NIL)))))
 
 ;;
 ;; EJEMPLOS
