@@ -141,6 +141,7 @@
 (wff-prefix-p '(v))
 (wff-prefix-p '(^))
 (wff-prefix-p '(v A))
+(wff-prefix-p '(v A B C))
 (wff-prefix-p '(^ (~ B)))
 (wff-prefix-p '(v A (~ B)))
 (wff-prefix-p '(v (~ B) A ))
@@ -171,29 +172,29 @@
 					; debería tener la estructura (<conector> FBF)
 					((unary-connector-p (first x))
 						(and (null (rest (rest x)))			; Después de FBF no hay "nada" (NIL)
-							 (wff-infix-p (first (rest x)))))
+							 (wff-infix-p (second x))))
 					; Si el elemento es un conector binario =>, <=>
 					; deberia tener la estructura (FBF1 <conector> FBF2)
-					((binary-connector-p (first (rest x)))
-						(and (null (rest (rest (rest x))))	; Después de FBF2 no hay "nada" (NIL)
+					((binary-connector-p (second x))
+						(and (null (fourth x))			; Después de FBF2 no hay "nada" (NIL)
 							 (wff-infix-p (first x))
-							 (wff-infix-p (first (rest (rest x))))))
+							 (wff-infix-p (third x))))
 					; Si el elemento es una conjuncion o disyuncion vacía,
 					; (^) (v), no tienen ninguna FBF detrás (NIL)
 					((n-ary-connector-p (first x))
 						(null (rest x)))
-					; Si el elemento es un conector enario ^ v, debería
+					; Si el elemento es un conector enario ^ ó v, debería
 					; tener la estructura (FBF1 <conector> FBF2 <conector> ... FBFn)
-					((n-ary-connector-p (first (rest x)))
-						; Si llegamos a una estructura de tipo (FBF1 <conector> FBF2)
-						(if (null (rest (rest (rest x))))
-							(and (wff-infix-p (first x))				; Comprueba si FBF1 es válida
-								 (wff-infix-p (first (rest (rest x))))) ; Comprueba si FBF2 es válida
+					((n-ary-connector-p (second x))
+						; Si llegamos a una estructura de tipo (FBFn-1 <conector> FBFn)
+						(if (null (fourth x))
+							(and (wff-infix-p (first x))	; Comprueba si FBF1 es válida
+								 (wff-infix-p (third x)))	; Comprueba si FBF2 es válida
 
 							; En caso de tener una estructura de tipo (FBFi <conector> FBFi+1 <conector> ... FBFn)
-							(and (eql (first (rest x)) (first (rest (rest (rest x)))))	; Comprueba si en la estructura no hay dos conectores distintos como: (A ^ B v C)
-								 (wff-infix-p (first x))										; Comprueba si FBF1 es válida
-								 (wff-infix-p (rest (rest x))))))							; Comprueba si (FBFi+1 <conector> ... FBFn) es válida
+							(and (eql (second x) (fourth x))		; Comprueba si en la estructura no hay dos conectores distintos como: (A ^ B v C)
+								 (wff-infix-p (first x))			; Comprueba si FBF1 es válida
+								 (wff-infix-p (rest (rest x))))))	; Comprueba si (FBFi+1 <conector> ... FBFn) es válida
 					(t NIL))))))
 
 ;;
@@ -270,6 +271,7 @@
 (prefix-to-infix '(^ (v p (=> a (^ b (~ c) d))))) ; (P V (A => (B ^ (~ C) ^ D)))
 (prefix-to-infix '(^ (^ (<=> p (~ q)) p ) e))     ; (((P <=> (~ Q)) ^ P) ^ E)  
 (prefix-to-infix '( v (~ p) q (~ r) (~ s)))       ; ((~ P) V Q V (~ R) V (~ S))
+(prefix-to-infix '(^ a b (~ b) (=> a c) (~ d)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.1.5
@@ -299,11 +301,16 @@
 				((n-ary-connector-p (first wff))
 			     (when (null (rest wff))
 					wff))
-				; Si el elemento es un conector enario ^ v, debería
-				; tener la estructura (FBF1 <conector> FBF2 <conector> ... FBFn)
+				;Si el elemento es un conector enario ^ v, debería
+				;tener la estructura (FBF1 <conector> FBF2 <conector> ... FBFn)
 				((n-ary-connector-p (second wff))
-				 (let ((rest_wffs (list (first wff) (infix-to-prefix (rest (rest wff)))))) ;Lista de FBFs ya evaluadas y convertidas a formato prefijo
-					(append (second wff) rest_wffs)))	
+					;Crea una lista de tipo (<conector> FBF1 FBF2 ... FBFn)
+					;sobre una copia de wff en la que todos los conectores
+					;se han eliminado.
+					;Por tanto, mapcar evalua cada FBF de la lista y 
+					;devuelve su forma prefijo.
+					(append (list (second wff))
+						    (mapcar #'infix-to-prefix (remove (second wff) wff))))
 				(t NIL)))))
 
 ;;
@@ -360,10 +367,15 @@
 ;; EVALUA A : T si FBF es una clausula, NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun clause-p (wff)
-  ;;
-  ;; 4.1.6 Completa el codigo
-  ;;
-  )
+  (when (listp wff)
+    (let ((conector (first wff))
+		  (elems (rest wff)))
+	  (if (eql +or+ conector)
+	    (or (null elems)					;Disyunción vacía (v)
+		    (and (null (rest elems))		;Disyunción con un elemento (v lit)
+			     (literal-p (second wff)))	
+		    (and (literal-p (second wff))	;Disyunción con más de un elemento
+			     (clause-p (cons conector (rest elems)))))))))
 
 ;;
 ;; EJEMPLOS:
@@ -391,10 +403,15 @@
 ;;            NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun cnf-p (wff)
-  ;;
-  ;; 4.1.7 Completa el codigo
-  ;;
-  )
+  (when (listp wff)
+	(let ((conector (first wff))
+		  (elems (rest wff)))
+	  (if (eql +and+ conector)
+		(or (null elems)					;Conjunción vacía (^)
+			(and (null (rest elems))		;Conjunción de tipo (^ (v)) ó (^ (v lit))
+				 (clause-p (second wff)))
+			(and (clause-p (second wff))	;Conjunción con más de un elemento
+				 (cnf-p (cons conector (rest elems)))))))))
 
 ;;
 ;; EJEMPLOS:
