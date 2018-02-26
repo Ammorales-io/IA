@@ -210,7 +210,7 @@
 (wff-infix-p '(A => (B <=> C))) 			; T
 (wff-infix-p '( B => (A ^ C ^ D))) 			; T   
 (wff-infix-p '( B => (A ^ C))) 			; T 
-(wff-infix-p '( B ^ (A v C))) 			; T 
+(wff-infix-p '( B ^ (A ^ C))) 			; T 
 (wff-infix-p '((p v (a => (b ^ (~ c) ^ d))) ^ ((p <=> (~ q)) ^ p ) ^ e))  ; T 
 (wff-infix-p nil) 					; NIL
 (wff-infix-p '(a ^)) 					; NIL
@@ -700,10 +700,7 @@
 (cnf 'a)
 
 (cnf '(v (~ a) b c))
-
 (cnf '(v (~ a) c (^ m n)))
-
-
 (print (cnf '(^ (v (~ a) b c) (~ e) (^ e f (~ g) h) (v m n) (^ r s q) (v u q) (^ x y))))
 (print (cnf '(v (^ (~ a) b c) (~ e) (^ e f (~ g) h) (v m n) (^ r s q) (v u q) (^ x y))))
 (print (cnf '(^ (v p  (~ q)) a (v k  r  (^ m  n)))))
@@ -783,6 +780,8 @@
 ;; ((P (~ Q)) ((~ A)) (K R M) (K R N))
 
 (eliminate-connectors '(^))
+;; NIL
+(eliminate-connectors '(v))
 ;; NIL
 (eliminate-connectors '(^ (v p (~ q)) (v) (v k r)))
 ;; ((P (~ Q)) NIL (K R))
@@ -871,12 +870,38 @@
 ;; RECIBE   : K - clausula (lista de literales, disyuncion implicita)
 ;; EVALUA A : clausula equivalente sin literales repetidos 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun eliminate-repeated-literals (k)
+  (let ((lit (first k))
+		(elems (rest k)))
+	(cond
+		;Hemos llegado al final
+		((null elems) k)
+		;Un elemento tiene sólo una ocurrencia
+		((= (count lit k) 1)
+			(append (list lit) (eliminate-repeated-literals (rest k))))
+		;Un elemento tiene más de una ocurrencia
+		(t (eliminate-repeated-literals (rest (member lit k :test #'equal)))))))
 
 (defun eliminate-repeated-literals (k)
-  ;;
-  ;; 4.3.1 Completa el codigo
-  ;;
-  )
+  (let ((lit (first k))
+		(elems (rest k)))
+	(cond
+		((null elems)
+			k);algo
+		((not (null (eliminate-literal lit k)))
+			(cons (eliminate-literal lit k)
+				  (eliminate-repeated-literals (rest k)))) 
+		(t (eliminate-repeated-literals (rest k))))))
+
+
+
+(defun eliminate-literal (lit k)
+	(when (= (count lit k) 1)
+		k))
+
+	;(if (= (count lit k) 1) ;Sólo una ocurrencia
+		;k
+		;(rest k)))
 
 ;;
 ;; EJEMPLO:
@@ -908,7 +933,7 @@
 ;; Predicado que determina si una clausula subsume otra
 ;;
 ;; RECIBE   : K1, K2 clausulas
-;; EVALUA a : K1 si K1 subsume a K2
+;; EVALUA a : (list K1) si K1 subsume a K2
 ;;            NIL en caso contrario
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun subsume (K1 K2)
@@ -927,13 +952,13 @@
 (subsume '(a b (~ c)) '(a) )
 ;; NIL
 (subsume '( b (~ c)) '(a b (~ c)) )
-;; ( b (~ c))
+;; (( b (~ c)))
 (subsume '(a b (~ c)) '( b (~ c)))
 ;; NIL
 (subsume '(a b (~ c)) '(d  b (~ c)))
 ;; nil
 (subsume '(a b (~ c)) '((~ a) b (~ c) a))
-;; (A B (~ C))
+;; ((A B (~ C)))
 (subsume '((~ a) b (~ c) a) '(a b (~ c)) )
 ;; nil
 
@@ -941,7 +966,7 @@
 ;; EJERCICIO 4.3.4
 ;; eliminacion de clausulas subsumidas en una FNC 
 ;; 
-;; RECIBE   : K (clausula), cnf (FBF en FNC)
+;; RECIBE   : cnf (FBF en FNC)
 ;; EVALUA A : FBF en FNC equivalente a cnf sin clausulas subsumidas 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun eliminate-subsumed-clauses (cnf) 
@@ -1242,9 +1267,11 @@
  '((a b d) ((~ p) q) ((~ c) a b) ((~ b) (~ p) d) (c d (~ a)))) ;;; T 
 (RES-SAT-p
  '(((~ p) (~ q) (~ r)) (q r) ((~ q) p) ((~ q)) ((~ p) (~ q) r))) ;;;T
+(RES-SAT-p '((P (~ Q)) (K R))) ;;; T
 ;;
 ;; UNSAT Examples
 ;;
+(RES-SAT-p '((P (~ Q)) NIL (K R))) ;;; NIL
 (RES-SAT-p '(nil))         ;;; NIL
 (RES-SAT-p '((S) nil))     ;;; NIL 
 (RES-SAT-p '((p) ((~ p)))) ;;; NIL
@@ -1328,4 +1355,3 @@
  (logical-consequence-RES-SAT-p 
   '(((~ p) => q) ^ (p <=> ((~ a) ^ b)) ^ ( (~ p) => (r  ^ (~ q)))) 
   '(~ q)))
-
