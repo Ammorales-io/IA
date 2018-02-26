@@ -449,7 +449,6 @@
 ;; EVALUA A : FBF equivalente en formato prefijo 
 ;;            sin connector <=>
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (defun eliminate-biconditional (wff)
   ;Si la FBF es NIL o un literal, devuelve su valor.
   (if (or (null wff) (literal-p wff))
@@ -550,28 +549,28 @@
 	  wff
 	  ;Sino, tenemos una estructura de tipo (<conector> FBFs).
 	  (let ((connector (first wff))
-			(connector_2 (first (second wff)))
 			(elems (second wff)))
 		(if (eql connector +not+)
 		  ;Si recibe una estructura de tipo (~ (<conector> FBFs)):
-		  (cond
-			;CASO 1: FBF de tipo (~ (<conector n-ario> FBF1 FBF2 ... FBFn)).
-			;Primero añade un conector ~ a cada FBF en (FBF1 FBF2 ... FBFn)
-			;y después crea una lista de la forma (<conector n-ario cambiado> <FBFs reducidas en ~>)
-			((n-ary-connector-p connector_2)
-				(let ((negated_wffs (mapcar #'(lambda(x) (list +not+ x)) (rest elems)))) ;Niega todas las FBFs.
-					(cons (exchange-and-or connector_2)
-						  (mapcar #'reduce-scope-of-negation negated_wffs))))	;Por cada FBF negada, reduce el ámbito
-																				;del conector ~.
-			;CASO 2: FBF de tipo (~ (~ FBF))
-			;Evalúa y reduce el ámbito de ~ en FBF.
-			((eql connector_2 +not+)
-				(reduce-scope-of-negation (second elems)))
-			(t NIL))
-		  ;Si la estructura es de tipo (<conector n-ario> FBF1 FBF2 ... FBFn),
-		  ;evalúa cada una de las FBFs en caso de que se necesite reducir
-		  ;el ámbito de ~.
-		  (cons connector
+		  (let ((connector_2 (first (second wff))))
+		    (cond
+			  ;CASO 1: FBF de tipo (~ (<conector n-ario> FBF1 FBF2 ... FBFn)).
+			  ;Primero añade un conector ~ a cada FBF en (FBF1 FBF2 ... FBFn)
+			  ;y después crea una lista de la forma (<conector n-ario cambiado> <FBFs reducidas en ~>)
+			  ((n-ary-connector-p connector_2)
+				  (let ((negated_wffs (mapcar #'(lambda(x) (list +not+ x)) (rest elems)))) ;Niega todas las FBFs.
+					  (cons (exchange-and-or connector_2)
+						    (mapcar #'reduce-scope-of-negation negated_wffs))))	  ;Por cada FBF negada, reduce el ámbito
+																				  ;del conector ~.
+			  ;CASO 2: FBF de tipo (~ (~ FBF))
+			  ;Evalúa y reduce el ámbito de ~ en FBF.
+			  ((eql connector_2 +not+)
+				  (reduce-scope-of-negation (second elems)))
+			  (t NIL)))
+		    ;Si la estructura es de tipo (<conector n-ario> FBF1 FBF2 ... FBFn),
+		    ;evalúa cada una de las FBFs en caso de que se necesite reducir
+		    ;el ámbito de ~.
+		    (cons connector
 				(mapcar #'reduce-scope-of-negation (rest wff)))))))  
 
 ;;
@@ -595,23 +594,51 @@
 ;; EVALUA A : FBF equivalente en formato prefijo FNC 
 ;;            con conectores ^, v
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Función que crea listas de listas, siendo
+;; cada una de tipo (elt <elemento-lst>
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun combine-elt-lst (elt lst)
+  ;Si la lista es NIL, crea una lista
+  ;de tipo ((elem))
   (if (null lst)
       (list (list elt))
+	;Si no es NIL, combina elt con cada elemento
+	;lst de esta forma: 
+	;(elt elem-lst-1) (elt-elem-lst-2)... (elt elem-lst-n)
     (mapcar #'(lambda (x) (cons elt x)) lst)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Función que añade conectores a una FBF
+;; con elementos combinados entre sí
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun exchange-NF (nf)
+  ;Si la FBF es NIL o un literal, devuelve su valor.
   (if (or (null nf) (literal-p nf)) 
       nf
+	;Sino, construye una lista con el conector n-ario 
+	;cambiado y las sublistas (<conector n-ario normal> FBF);
+	;todo ello utilizando la FBF combinada.
     (let ((connector (first nf)))
       (cons (exchange-and-or connector)
             (mapcar #'(lambda (x)
                           (cons connector x))
                 (exchange-NF-aux (rest nf)))))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Función que combina los elementos de una FBF
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun exchange-NF-aux (nf)
+  ;Si recibe NIL como argumento, devuelve NIL.
   (if (null nf) 
       NIL
+	;Sino, obtiene el primer elemento de la FBF.
+	;
+	;Si el primer elemento es un literal, construirá
+	;una lista combinándolo con el resto de la FBF.
+	;Si no es un literal, combinará el resto de la FBF
+	;con sus propios elementos.
     (let ((lst (first nf)))
       (mapcan #'(lambda (x) 
                   (combine-elt-lst 
@@ -619,28 +646,53 @@
                    (exchange-NF-aux (rest nf)))) 
         (if (literal-p lst) (list lst) (rest lst))))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Función que simplifica una FBF
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun simplify (connector lst-wffs )
+  ;Si la FBF pasada como argumento es un literal,
+  ;devuelve su valor
   (if (literal-p lst-wffs)
-      lst-wffs                    
+      lst-wffs
+	;Sino, crea una lista simplificada sobre lst-wffs
+	;dependiendo de ciertos criterios.
     (mapcan #'(lambda (x) 
-                (cond 
+                (cond
+				 ;Si el elemento es un literal, lo añade
+				 ;a una lista.
                  ((literal-p x) (list x))
+				 ;Si el primer elemento de la FBF coincide
+				 ;con el conector pasado como argumento,
+				 ;simplifica el resto de la lista.
                  ((equal connector (first x))
                   (mapcan 
                       #'(lambda (y) (simplify connector (list y))) 
-                    (rest x))) 
+                    (rest x)))
+				 ;Si el elemento no es un literal (con lo que 
+				 ;sería un conector) y no coincide con el conector
+				 ;pasado como argumento, mete el elemento en una lista.
                  (t (list x))))               
       lst-wffs)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Función que traduce una FBF a FNC
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun cnf (wff)
   (cond
+   ;Si wff es una FNC, devuelve su contenido.
    ((cnf-p wff) wff)
+   ;Si wff es un literal, crea una lista
+   ;de tipo (^ (v lit)) (FNC con 1 elemento).
    ((literal-p wff)
     (list +and+ (list +or+ wff)))
-   ((let ((connector (first wff))) 
+   ((let ((connector (first wff)))	;Evalúa el conector de wff.
       (cond
+	   ;CASO 1: Conector ^
+	   ;Simplifica y evalúa el resto de la FBF.
        ((equal +and+ connector) 
         (cons +and+ (simplify +and+ (mapcar #'cnf (rest wff)))))
+	   ;CASO 2: Conector v
+	   ;<Intercambia> la FBF simplificada previamente.
        ((equal +or+ connector) 
         (cnf (exchange-NF (cons +or+ (simplify +or+ (rest wff)))))))))))
 
@@ -648,6 +700,10 @@
 (cnf 'a)
 
 (cnf '(v (~ a) b c))
+
+(cnf '(v (~ a) c (^ m n)))
+
+
 (print (cnf '(^ (v (~ a) b c) (~ e) (^ e f (~ g) h) (v m n) (^ r s q) (v u q) (^ x y))))
 (print (cnf '(v (^ (~ a) b c) (~ e) (^ e f (~ g) h) (v m n) (^ r s q) (v u q) (^ x y))))
 (print (cnf '(^ (v p  (~ q)) a (v k  r  (^ m  n)))))
@@ -700,26 +756,42 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun eliminate-connectors (cnf)
-  ;;
-  ;; 4.2.5 Completa el codigo
-  ;;
-  )
+  ;Si cnf es un literal, devuelve su valor.
+  (if (literal-p cnf)
+    cnf
+	  ;Sino, comprueba si el primer elemento es el
+	  ;conector ^ ó v.
+	  (let ((connector (first cnf)))
+		(when (n-ary-connector-p connector)
+			;Siempre que se cumpla la condición, evaluará
+			;cada elemento de cnf y devolverá una lista de
+			;listas sin conectores.
+			(mapcar #'eliminate-connectors (rest cnf))))))
+		  
 
 (eliminate-connectors 'nil)
+;; NIL
 (eliminate-connectors (cnf '(^ (v p  (~ q))  (v k  r  (^ m  n)))))
+;; ((P (~ Q)) (K R M) (K R N))
 (eliminate-connectors
  (cnf '(^ (v (~ a) b c) (~ e) (^ e f (~ g) h) (v m n) (^ r s q) (v u q) (^ x y))))
-
+;; (((~ A) B C) ((~ E)) (E) (F) ((~ G)) (H) (M N) (R) (S) (Q) (U Q) (X) (Y))
 (eliminate-connectors (cnf '(v p  q  (^ r  m)  (^ n  q)  s )))
+;; ((P Q R N S) (P Q R Q S) (P Q M N S) (P Q M Q S))
 (eliminate-connectors (print (cnf '(^ (v p  (~ q)) (~ a) (v k  r  (^ m  n))))))
+;; (^ (V P (~ Q)) (V (~ A)) (V K R M) (V K R N)) --print de cnf
+;; ((P (~ Q)) ((~ A)) (K R M) (K R N))
 
 (eliminate-connectors '(^))
+;; NIL
 (eliminate-connectors '(^ (v p (~ q)) (v) (v k r)))
+;; ((P (~ Q)) NIL (K R))
 (eliminate-connectors '(^ (v a b)))
+;; ((A B))
 
+;;
 ;;   EJEMPLOS:
 ;;
-
 (eliminate-connectors '(^ (v p (~ q)) (v k r)))
 ;; ((P (~ Q)) (K R))
 (eliminate-connectors '(^ (v p (~ q)) (v q (~ a)) (v s e f) (v b)))
@@ -736,17 +808,59 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun wff-infix-to-cnf (wff)
-  ;;
-  ;; 4.2.6 Completa el codigo
-  ;;
-  )
+  ;Siempre que wff sea FNC, obtendrá
+  ;su forma FBF sin conectores.
+  (when (wff-infix-p wff)
+	(let ((cnf (get-cnf wff)))
+		(eliminate-connectors cnf))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; FUNCIONES AUXILIARES
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Función que devuelve la FBF
+;; convertida a formato prefijo
+(defun transformar-prefijo (wff)
+	(infix-to-prefix wff))
+
+;; Función que devuelve la FBF en 
+;; formato prefijo sin conectores <=>
+;; (Paso 1)
+(defun eliminar-bicond (wff)
+	(let ((wff-paso-1 (transformar-prefijo wff)))
+		(eliminate-biconditional wff-paso-1)))
+
+;; Función que devuelve la FBF en 
+;; formato prefijo sin conectores =>
+;; (Paso 2)
+(defun eliminar-cond (wff)
+	(let ((wff-paso-2 (eliminar-bicond wff)))
+		(eliminate-conditional wff-paso-2)))
+
+;; Función que devuelve la FBF en 
+;; formato prefijo con el ámbito 
+;; de negación reducido
+;; (Paso 3)
+(defun reducir-negacion (wff)
+	(let ((wff-paso-3 (eliminar-cond wff)))
+		(reduce-scope-of-negation wff-paso-3)))
+
+;; Función que devuelve la FBF en
+;; formato prefijo convertida a FNC
+;; (Paso 4)
+(defun get-cnf (wff)
+	(let ((wff-paso-4 (reducir-negacion wff)))
+		(cnf wff-paso-4)))
 
 ;;
 ;; EJEMPLOS:
 ;; 
 (wff-infix-to-cnf 'a)
+;; ((A))
 (wff-infix-to-cnf '(~ a))
+;; (((~ A)))
 (wff-infix-to-cnf  '( (~ p) v q v (~ r) v (~ s)))
+;; (((~ P) Q (~ R) (~ S)))
 (wff-infix-to-cnf  '((p v (a => (b ^ (~ c) ^ d))) ^ ((p <=> (~ q)) ^ p) ^ e))
 ;; ((P (~ A) B) (P (~ A) (~ C)) (P (~ A) D) ((~ P) (~ Q)) (Q P) (P) (E))
 
