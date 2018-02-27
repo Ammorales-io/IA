@@ -901,7 +901,17 @@
   ;Cláusula sin literales repetidos.
   (let ((no-rep-clause (mapcar #'eliminate-repeated-literals cnf)))
 
-
+;Comprueba si una cláusula es igual que otra 
+;que está en la FNC, se representen de manera
+;idéntica o diferente. Por ejemplo, '(a b c) = '(b a c)
+(defun check-if-equal (cls target-cls)
+  (cond
+	((equal cls target-cls)
+		t)
+	((and (null (set-difference cls target-cls :test #'equal))
+		  (null (set-difference target-cls cls :test #'equal)))
+		t)
+	(t NIL)))
 	
 ;;
 ;; EJEMPLO:
