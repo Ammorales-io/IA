@@ -164,53 +164,52 @@
 ;;            NIL en caso contrario. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun wff-infix-p (x)
-	(unless (null x)				;NIL no es FBF en formato infijo (por convencion)
-		(or (literal-p x)			;Un literal es FBF en formato infijo
-			(and (listp x)			;En caso de que no sea un literal debe ser una lista
-				(cond
-					;Si el primer elemento es un connector unario ~
-					;debería tener la estructura (<conector> FBF)
-					((unary-connector-p (first x))
-						(and (null (rest (rest x)))			;Después de FBF no hay "nada" (NIL)
-							 (wff-infix-p (second x))))
-					;Si el elemento es un conector binario =>, <=>
-					;deberia tener la estructura (FBF1 <conector> FBF2)
-					((binary-connector-p (second x))
-						(and (null (fourth x))			;Después de FBF2 no hay "nada" (NIL)
-							 (wff-infix-p (first x))
-							 (wff-infix-p (third x))))
-					;Si el elemento es una conjuncion o disyuncion vacía,
-					;(^) (v), no tienen ninguna FBF detrás (NIL)
-					((n-ary-connector-p (first x))
-						(null (rest x)))
-					;Si el elemento es un conector enario ^ ó v, debería
-					;tener la estructura (FBF1 <conector> FBF2 <conector> ... FBFn)
-					((n-ary-connector-p (second x))
-						;Si llegamos a una estructura de tipo (FBFn-1 <conector> FBFn)
-						(if (null (fourth x))
-							(and (wff-infix-p (first x))	;Comprueba si FBF1 es válida
-								 (wff-infix-p (third x)))	;Comprueba si FBF2 es válida
-
-							;En caso de tener una estructura de tipo (FBFi <conector> FBFi+1 <conector> ... FBFn)
-							(and (eql (second x) (fourth x))		;Comprueba si en la estructura no hay dos conectores distintos como: (A ^ B v C)
-								 (wff-infix-p (first x))			;Comprueba si FBF1 es válida
-								 (wff-infix-p (rest (rest x))))))	;Comprueba si (FBFi+1 <conector> ... FBFn) es válida
-					;No es FBF en formato infijo
-					(t NIL))))))
+  (unless (null x)	;NIL no es FBF en formato infijo (por convencion)
+    (or (literal-p x)	;Un literal es FBF en formato infijo
+        (and (listp x)	;En caso de que no sea un literal debe ser una lista
+             (cond
+              ;Si el primer elemento es un connector unario ~
+              ;debería tener la estructura (<conector> FBF)
+              ((unary-connector-p (first x))
+               (and (null (rest (rest x)))	;Después de FBF no hay "nada" (NIL)
+                    (wff-infix-p (second x))))
+              ;Si el elemento es un conector binario =>, <=>
+              ;deberia tener la estructura (FBF1 <conector> FBF2)
+              ((binary-connector-p (second x))
+               (and (null (fourth x))		;Después de FBF2 no hay "nada" (NIL)
+                    (wff-infix-p (first x))
+                    (wff-infix-p (third x))))
+              ;Si el elemento es una conjuncion o disyuncion vacía,
+              ;(^) (v), no tienen ninguna FBF detrás (NIL)
+              ((n-ary-connector-p (first x))
+               (null (rest x)))
+              ;Si el elemento es un conector enario ^ ó v, debería
+              ;tener la estructura (FBF1 <conector> FBF2 <conector> ... FBFn)
+              ((n-ary-connector-p (second x))
+               ;Si llegamos a una estructura de tipo (FBFn-1 <conector> FBFn)
+               (if (null (fourth x))
+                   (and (wff-infix-p (first x))	;Comprueba si FBF1 es válida
+                        (wff-infix-p (third x)))	;Comprueba si FBF2 es válida
+                 ;En caso de tener una estructura de tipo (FBFi <conector> FBFi+1 <conector> ... FBFn)
+                 (and (eql (second x) (fourth x))	;Comprueba si en la estructura no hay dos conectores distintos como: (A ^ B v C)
+                      (wff-infix-p (first x))		;Comprueba si FBF1 es válida
+                      (wff-infix-p (rest (rest x))))))	;Comprueba si (FBFi+1 <conector> ... FBFn) es válida
+              ;No es FBF en formato infijo
+              (t NIL))))))
 
 ;;
 ;; EJEMPLOS:
 ;;
-(wff-infix-p 'a) 						; T
+(wff-infix-p 'a) 					; T
 (wff-infix-p '(^)) 					; T  ;; por convencion
 (wff-infix-p '(v)) 					; T  ;; por convencion
-(wff-infix-p '(A ^ (v))) 			      ; T  
-(wff-infix-p '( a ^ b ^ (p v q) ^ (~ r) ^ s))  	; T 
+(wff-infix-p '(A ^ (v))) 			      	; T  
+(wff-infix-p '( a ^ b ^ (p v q) ^ (~ r) ^ s))  		; T 
 (wff-infix-p '(A => B)) 				; T
 (wff-infix-p '(A => (B <=> C))) 			; T
 (wff-infix-p '( B => (A ^ C ^ D))) 			; T   
-(wff-infix-p '( B => (A ^ C))) 			; T 
-(wff-infix-p '( B ^ (A ^ C))) 			; T 
+(wff-infix-p '( B => (A ^ C))) 				; T 
+(wff-infix-p '( B ^ (A ^ C))) 				; T 
 (wff-infix-p '((p v (a => (b ^ (~ c) ^ d))) ^ ((p <=> (~ q)) ^ p ) ^ e))  ; T 
 (wff-infix-p nil) 					; NIL
 (wff-infix-p '(a ^)) 					; NIL
@@ -283,36 +282,36 @@
 ;; EVALUA A : FBF en formato prefijo 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun infix-to-prefix (wff)
-	(when (wff-infix-p wff)		;Mientras wff sea una FBF
-		(if (literal-p wff)
-			wff					;Caso base: wff es un literal
-			(cond
-				;Si el primer elemento es un connector unario ~
-				;debería tener la estructura (<conector> FBF)
-				((unary-connector-p (first wff))
-				 (list (first wff) (infix-to-prefix (second wff))))
-				;Si el elemento es un conector binario =>, <=>
-				;deberia tener la estructura (FBF1 <conector> FBF2)
-				((binary-connector-p (second wff))
-				 (list (second wff)
-					   (infix-to-prefix (first wff))
-					   (infix-to-prefix (third wff))))
-				; Si el elemento es una conjuncion o disyuncion 
-				; vacía, se evalúa direcamente.
-				((n-ary-connector-p (first wff))
-			     (when (null (rest wff))
-					wff))
-				;Si el elemento es un conector enario ^ v, debería
-				;tener la estructura (FBF1 <conector> FBF2 <conector> ... FBFn)
-				((n-ary-connector-p (second wff))
-					;Crea una lista de tipo (<conector> FBF1 FBF2 ... FBFn)
-					;sobre una copia de wff en la que todos los conectores
-					;se han eliminado.
-					;Por tanto, mapcar evalua cada FBF de la lista y 
-					;devuelve su forma prefijo.
-					(append (list (second wff))
-						    (mapcar #'infix-to-prefix (remove (second wff) wff))))
-				(t NIL)))))
+  (when (wff-infix-p wff)		;Mientras wff sea una FBF
+    (if (literal-p wff)
+        wff					;Caso base: wff es un literal
+      (cond   
+       ;Si el primer elemento es un connector unario ~
+       ;debería tener la estructura (<conector> FBF)
+       ((unary-connector-p (first wff))
+        (list (first wff) (infix-to-prefix (second wff))))
+       ;Si el elemento es un conector binario =>, <=>
+       ;deberia tener la estructura (FBF1 <conector> FBF2)
+       ((binary-connector-p (second wff))
+        (list (second wff)
+              (infix-to-prefix (first wff))
+              (infix-to-prefix (third wff))))
+       ; Si el elemento es una conjuncion o disyuncion 
+       ; vacía, se evalúa direcamente.
+       ((n-ary-connector-p (first wff))
+        (when (null (rest wff))
+          wff))
+       ;Si el elemento es un conector enario ^ v, debería
+       ;tener la estructura (FBF1 <conector> FBF2 <conector> ... FBFn)
+       ((n-ary-connector-p (second wff))
+        ;Crea una lista de tipo (<conector> FBF1 FBF2 ... FBFn)
+        ;sobre una copia de wff en la que todos los conectores
+        ;se han eliminado.
+        ;Por tanto, mapcar evalua cada FBF de la lista y 
+        ;devuelve su forma prefijo.
+        (append (list (second wff))
+                (mapcar #'infix-to-prefix (remove (second wff) wff))))
+       (t NIL)))))
 
 ;;
 ;; EJEMPLOS
@@ -370,13 +369,13 @@
 (defun clause-p (wff)
   (when (listp wff)
     (let ((conector (first wff))
-		  (elems (rest wff)))
-	  (if (eql +or+ conector)
-	    (or (null elems)					;Disyunción vacía (v)
-		    (and (null (rest elems))		;Disyunción con un elemento (v lit)
-			     (literal-p (second wff)))	
-		    (and (literal-p (second wff))	;Disyunción con más de un elemento
-			     (clause-p (cons conector (rest elems)))))))))
+          (elems (rest wff)))
+      (if (eql +or+ conector)
+          (or (null elems)			;Disyunción vacía (v)
+              (and (null (rest elems))		;Disyunción con un elemento (v lit)
+                   (literal-p (second wff)))
+              (and (literal-p (second wff))	;Disyunción con más de un elemento
+                   (clause-p (cons conector (rest elems)))))))))
 
 ;;
 ;; EJEMPLOS:
@@ -396,7 +395,7 @@
 (clause-p '(~ (v p q)))           ; NIL
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; EJERCICIO 1.7
+;; EJERCICIO 4.1.7
 ;; Predicado para determinar si una FBF esta en FNC  
 ;;
 ;; RECIBE   : FFB en formato prefijo 
@@ -405,14 +404,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun cnf-p (wff)
   (when (listp wff)
-	(let ((conector (first wff))
-		  (elems (rest wff)))
-	  (if (eql +and+ conector)
-		(or (null elems)					;Conjunción vacía (^)
-			(and (null (rest elems))		;Conjunción de tipo (^ (v)) ó (^ (v clause))
-				 (clause-p (second wff)))
-			(and (clause-p (second wff))	;Conjunción con más de una cláusula
-				 (cnf-p (cons conector (rest elems)))))))))
+    (let ((conector (first wff))
+          (elems (rest wff)))
+      (if (eql +and+ conector)
+          (or (null elems)			;Conjunción vacía (^)
+              (and (null (rest elems))		;Conjunción de tipo (^ (v)) ó (^ (v clause))
+                   (clause-p (second wff)))
+              (and (clause-p (second wff))	;Conjunción con más de una cláusula
+                   (cnf-p (cons conector (rest elems)))))))))
 
 ;;
 ;; EJEMPLOS:
@@ -509,9 +508,9 @@
 ;;
 ;; EJEMPLOS:
 ;;
-(eliminate-conditional '(=> p q))                      ;;; (V (~ P) Q)
-(eliminate-conditional '(=> p (v q s p)))        	   ;;; (V (~ P) (V Q S P))
-(eliminate-conditional '(=> (=> (~ p) q) (^ s (~ q)))) ;;; (V (~ (V (~ (~ P)) Q)) (^ S (~ Q)))
+(eliminate-conditional '(=> p q))                      	;;; (V (~ P) Q)
+(eliminate-conditional '(=> p (v q s p)))        	;;; (V (~ P) (V Q S P))
+(eliminate-conditional '(=> (=> (~ p) q) (^ s (~ q)))) 	;;; (V (~ (V (~ (~ P)) Q)) (^ S (~ Q)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -546,32 +545,31 @@
 (defun reduce-scope-of-negation (wff)
   ;Si la FBF es NIL o un literal, devuelve su valor.
   (if (or (null wff) (literal-p wff))
-	  wff
-	  ;Sino, tenemos una estructura de tipo (<conector> FBFs).
-	  (let ((connector (first wff))
-			(elems (second wff)))
-		(if (eql connector +not+)
-		  ;Si recibe una estructura de tipo (~ (<conector> FBFs)):
-		  (let ((connector_2 (first (second wff))))
-		    (cond
-			  ;CASO 1: FBF de tipo (~ (<conector n-ario> FBF1 FBF2 ... FBFn)).
-			  ;Primero añade un conector ~ a cada FBF en (FBF1 FBF2 ... FBFn)
-			  ;y después crea una lista de la forma (<conector n-ario cambiado> <FBFs reducidas en ~>)
-			  ((n-ary-connector-p connector_2)
-				  (let ((negated_wffs (mapcar #'(lambda(x) (list +not+ x)) (rest elems)))) ;Niega todas las FBFs.
-					  (cons (exchange-and-or connector_2)
-						    (mapcar #'reduce-scope-of-negation negated_wffs))))	  ;Por cada FBF negada, reduce el ámbito
-																				  ;del conector ~.
-			  ;CASO 2: FBF de tipo (~ (~ FBF))
-			  ;Evalúa y reduce el ámbito de ~ en FBF.
-			  ((eql connector_2 +not+)
-				  (reduce-scope-of-negation (second elems)))
-			  (t NIL)))
-		    ;Si la estructura es de tipo (<conector n-ario> FBF1 FBF2 ... FBFn),
-		    ;evalúa cada una de las FBFs en caso de que se necesite reducir
-		    ;el ámbito de ~.
-		    (cons connector
-				(mapcar #'reduce-scope-of-negation (rest wff)))))))  
+      wff
+    ;Sino, tenemos una estructura de tipo (<conector> FBFs).
+    (let ((connector (first wff))
+          (elems (second wff)))
+      (if (eql connector +not+)
+          ;Si recibe una estructura de tipo (~ (<conector> FBFs)):
+          (let ((connector_2 (first (second wff))))
+            (cond
+             ;CASO 1: FBF de tipo (~ (<conector n-ario> FBF1 FBF2 ... FBFn)).
+             ;Primero añade un conector ~ a cada FBF en (FBF1 FBF2 ... FBFn)
+             ;y después crea una lista de la forma (<conector n-ario cambiado> <FBFs reducidas en ~>)
+             ((n-ary-connector-p connector_2)
+              (let ((negated_wffs (mapcar #'(lambda(x) (list +not+ x)) (rest elems)))) ;Niega todas las FBFs.
+                (cons (exchange-and-or connector_2)
+                      (mapcar #'reduce-scope-of-negation negated_wffs))))	;Por cada FBF negada, reduce el ámbito del conector ~.
+             ;CASO 2: FBF de tipo (~ (~ FBF))
+             ;Evalúa y reduce el ámbito de ~ en FBF.
+             ((eql connector_2 +not+)
+              (reduce-scope-of-negation (second elems)))
+             (t NIL)))
+        ;Si la estructura es de tipo (<conector n-ario> FBF1 FBF2 ... FBFn),
+        ;evalúa cada una de las FBFs en caso de que se necesite reducir
+        ;el ámbito de ~.
+        (cons connector
+              (mapcar #'reduce-scope-of-negation (rest wff)))))))  
 
 ;;
 ;;  EJEMPLOS:
@@ -755,15 +753,15 @@
 (defun eliminate-connectors (cnf)
   ;Si cnf es un literal, devuelve su valor.
   (if (literal-p cnf)
-    cnf
-	  ;Sino, comprueba si el primer elemento es el
-	  ;conector ^ ó v.
-	  (let ((connector (first cnf)))
-		(when (n-ary-connector-p connector)
-			;Siempre que se cumpla la condición, evaluará
-			;cada elemento de cnf y devolverá una lista de
-			;listas sin conectores.
-			(mapcar #'eliminate-connectors (rest cnf))))))
+      cnf
+    ;Sino, comprueba si el primer elemento es el
+    ;conector ^ ó v.
+    (let ((connector (first cnf)))
+      (when (n-ary-connector-p connector)
+        ;Siempre que se cumpla la condición, evaluará
+        ;cada elemento de cnf y devolverá una lista de
+        ;listas sin conectores.
+        (mapcar #'eliminate-connectors (rest cnf))))))
 		  
 
 (eliminate-connectors 'nil)
@@ -804,36 +802,36 @@
 ;; Función que devuelve la FBF
 ;; convertida a formato prefijo
 (defun transformar-prefijo (wff)
-	(infix-to-prefix wff))
+  (infix-to-prefix wff))
 
 ;; Función que devuelve la FBF en 
 ;; formato prefijo sin conectores <=>
 ;; (Paso 1)
 (defun eliminar-bicond (wff)
-	(let ((wff-paso-1 (transformar-prefijo wff)))
-		(eliminate-biconditional wff-paso-1)))
+  (let ((wff-paso-1 (transformar-prefijo wff)))
+    (eliminate-biconditional wff-paso-1)))
 
 ;; Función que devuelve la FBF en 
 ;; formato prefijo sin conectores =>
 ;; (Paso 2)
 (defun eliminar-cond (wff)
-	(let ((wff-paso-2 (eliminar-bicond wff)))
-		(eliminate-conditional wff-paso-2)))
+  (let ((wff-paso-2 (eliminar-bicond wff)))
+    (eliminate-conditional wff-paso-2)))
 
 ;; Función que devuelve la FBF en 
 ;; formato prefijo con el ámbito 
 ;; de negación reducido
 ;; (Paso 3)
 (defun reducir-negacion (wff)
-	(let ((wff-paso-3 (eliminar-cond wff)))
-		(reduce-scope-of-negation wff-paso-3)))
+  (let ((wff-paso-3 (eliminar-cond wff)))
+    (reduce-scope-of-negation wff-paso-3)))
 
 ;; Función que devuelve la FBF en
 ;; formato prefijo convertida a FNC
 ;; (Paso 4)
 (defun get-cnf (wff)
-	(let ((wff-paso-4 (reducir-negacion wff)))
-		(cnf wff-paso-4)))
+  (let ((wff-paso-4 (reducir-negacion wff)))
+    (cnf wff-paso-4)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.2.6
@@ -849,8 +847,8 @@
   ;Siempre que wff sea FNC, obtendrá
   ;su forma FBF sin conectores.
   (when (wff-infix-p wff)
-	(let ((cnf (get-cnf wff)))
-		(eliminate-connectors cnf))))
+    (let ((cnf (get-cnf wff)))
+      (eliminate-connectors cnf))))
 
 ;;
 ;; EJEMPLOS:
@@ -873,16 +871,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun eliminate-repeated-literals (k)
   (let ((lit (first k))
-		(elems (rest k)))
-	(cond
-		;CASO1: Hemos llegado al final.
-		((null elems) k)
-		;CASO 2: Un elemento tiene sólo una ocurrencia. 
-		;Para comparar, utilizamos su representación textual (equal).
-		((= (count lit k :test #'equal) 1)
-			(cons lit (eliminate-repeated-literals (rest k))))
-		;CASO 3: Un elemento tiene más de una ocurrencia.
-		(t (eliminate-repeated-literals (rest (member lit k :test #'equal)))))))
+        (elems (rest k)))
+    (cond
+     ;CASO1: Hemos llegado al final.
+     ((null elems) k)
+     ;CASO 2: Un elemento tiene sólo una ocurrencia. 
+     ;Para comparar, utilizamos su representación textual (equal).
+     ((= (count lit k :test #'equal) 1)
+      (cons lit (eliminate-repeated-literals (rest k))))
+     ;CASO 3: Un elemento tiene más de una ocurrencia.
+     (t (eliminate-repeated-literals (rest (member lit k :test #'equal)))))))
 
 ;;
 ;; EJEMPLO:
