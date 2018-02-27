@@ -796,24 +796,8 @@
 (eliminate-connectors '(^ (v p (~ q)) (v q (~ a)) (v s e f) (v b)))
 ;; ((P (~ Q)) (Q (~ A)) (S E F) (B))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; EJERCICIO 4.2.6
-;; Dada una FBF en formato infijo
-;; evalua a lista de listas sin conectores
-;; que representa la FNC equivalente
-;;
-;; RECIBE   : FBF 
-;; EVALUA A : FBF en FNC (con conectores ^, v eliminados)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun wff-infix-to-cnf (wff)
-  ;Siempre que wff sea FNC, obtendrá
-  ;su forma FBF sin conectores.
-  (when (wff-infix-p wff)
-	(let ((cnf (get-cnf wff)))
-		(eliminate-connectors cnf))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EJERCICIO 4.2.6
 ;; FUNCIONES AUXILIARES
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -851,6 +835,23 @@
 	(let ((wff-paso-4 (reducir-negacion wff)))
 		(cnf wff-paso-4)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EJERCICIO 4.2.6
+;; Dada una FBF en formato infijo
+;; evalua a lista de listas sin conectores
+;; que representa la FNC equivalente
+;;
+;; RECIBE   : FBF 
+;; EVALUA A : FBF en FNC (con conectores ^, v eliminados)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun wff-infix-to-cnf (wff)
+  ;Siempre que wff sea FNC, obtendrá
+  ;su forma FBF sin conectores.
+  (when (wff-infix-p wff)
+	(let ((cnf (get-cnf wff)))
+		(eliminate-connectors cnf))))
+
 ;;
 ;; EJEMPLOS:
 ;; 
@@ -874,40 +875,22 @@
   (let ((lit (first k))
 		(elems (rest k)))
 	(cond
-		;Hemos llegado al final
+		;CASO1: Hemos llegado al final.
 		((null elems) k)
-		;Un elemento tiene sólo una ocurrencia
-		((= (count lit k) 1)
-			(append (list lit) (eliminate-repeated-literals (rest k))))
-		;Un elemento tiene más de una ocurrencia
+		;CASO 2: Un elemento tiene sólo una ocurrencia. 
+		;Para comparar, utilizamos su representación textual (equal).
+		((= (count lit k :test #'equal) 1)
+			(cons lit (eliminate-repeated-literals (rest k))))
+		;CASO 3: Un elemento tiene más de una ocurrencia.
 		(t (eliminate-repeated-literals (rest (member lit k :test #'equal)))))))
-
-(defun eliminate-repeated-literals (k)
-  (let ((lit (first k))
-		(elems (rest k)))
-	(cond
-		((null elems)
-			k);algo
-		((not (null (eliminate-literal lit k)))
-			(cons (eliminate-literal lit k)
-				  (eliminate-repeated-literals (rest k)))) 
-		(t (eliminate-repeated-literals (rest k))))))
-
-
-
-(defun eliminate-literal (lit k)
-	(when (= (count lit k) 1)
-		k))
-
-	;(if (= (count lit k) 1) ;Sólo una ocurrencia
-		;k
-		;(rest k)))
 
 ;;
 ;; EJEMPLO:
 ;;
 (eliminate-repeated-literals '(a b (~ c) (~ a) a c (~ c) c a))
 ;;;   (B (~ A) (~ C) C A)
+(eliminate-repeated-literals '(m (~ n) a b (~ a) (~ a) n m (~ m) (~ a) a))
+;;;	  ((~ N) B N M (~ M) (~ A) A)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.3.2
@@ -916,12 +899,12 @@
 ;; RECIBE   : cnf - FBF en FNC (lista de clausulas, conjuncion implicita)
 ;; EVALUA A : FNC equivalente sin clausulas repetidas 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun eliminate-repeated-clauses (cnf) 
-  ;;
-  ;; 4.3.2 Completa el codigo
-  ;;
-  )
+(defun eliminate-repeated-clauses (cnf)
+  ;Cláusula sin literales repetidos.
+  (let ((no-rep-clause (mapcar #'eliminate-repeated-literals cnf)))
 
+
+	
 ;;
 ;; EJEMPLO:
 ;;
