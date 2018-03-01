@@ -215,15 +215,15 @@
 (wff-infix-p '(a ^)) 					; NIL
 (wff-infix-p '(^ a)) 					; NIL
 (wff-infix-p '(a)) 					; NIL
-(wff-infix-p '((a))) 				      ; NIL
-(wff-infix-p '((a) b))   			      ; NIL
-(wff-infix-p '(^ a b q (~ r) s))  		      ; NIL 
-(wff-infix-p '( B => A C)) 			      ; NIL   
-(wff-infix-p '( => A)) 				      ; NIL   
-(wff-infix-p '(A =>)) 				      ; NIL   
-(wff-infix-p '(A => B <=> C)) 		      ; NIL
-(wff-infix-p '( B => (A ^ C v D))) 		      ; NIL  
-(wff-infix-p '( B ^ C v D )) 			      ; NIL 
+(wff-infix-p '((a))) 				      	; NIL
+(wff-infix-p '((a) b))   			      	; NIL
+(wff-infix-p '(^ a b q (~ r) s))  		      	; NIL 
+(wff-infix-p '( B => A C)) 			      	; NIL   
+(wff-infix-p '( => A)) 				      	; NIL   
+(wff-infix-p '(A =>)) 				      	; NIL   
+(wff-infix-p '(A => B <=> C)) 		      		; NIL
+(wff-infix-p '( B => (A ^ C v D))) 		      	; NIL  
+(wff-infix-p '( B ^ C v D )) 			      	; NIL 
 (wff-infix-p '((p v (a => e (b ^ (~ c) ^ d))) ^ ((p <=> (~ q)) ^ p ) ^ e)); NIL 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1020,13 +1020,49 @@
 ;; EVALUA A : FBF en FNC equivalente a cnf sin clausulas subsumidas 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun eliminate-subsumed-clauses (cnf) 
-  ; set-difference returns a list of elements of list-1 that do not appear in list-2.
-  ;  (setq lst1 (list "A" "b" "C" "d")
-          ;lst2 (list "a" "B" "C" "d"))
-  ; (set-difference lst1 lst2) =>  ("d" "C" "b" "A")
-  ; (set-difference lst1 lst2 :test 'equal) =>  ("b" "A")
+  (eliminate-subsumed-clauses-rec cnf cnf)
 )
 
+(defun eliminate-subsumed-clauses-rec (cnf cnf-original)
+  (if (null (rest cnf))
+      cnf-original
+    (if (null (first-needs removal (first cnf) (rest cnf)))
+        (append 
+         (first cnf) 
+         (intersection 
+          (find-subsumed-clauses (first cnf) (rest cnf)) 
+          (eliminate-subsumed-clauses (rest cnf)) 
+          :test #'equal))
+      (intersection 
+          (find-subsumed-clauses (first cnf) (rest cnf)) 
+          (eliminate-subsumed-clauses (rest cnf)) 
+          :test #'equal))))
+  
+
+(defun first-needs-removal? (first-fbf rest-cnf)
+  (if (null (first rest-cnf))
+      nil
+    (let ((ss-result (subsume first-fbf (first rest-cnf))))
+        (if (equal ss-result first-fbf)
+            T
+          (or nil (first-needs-removal? first-fbf (rest rest-cnf))))))))
+
+(defun find-subsumed-clauses (first-fbf rest-cnf)
+  (if (null (first rest-cnf))
+      '()
+    (let ((ss-result (subsume first-fbf (first rest-cnf))))
+        (if (equal ss-result first-fbf)
+            (append nil (find-subsumed-clauses first-fbf (rest rest-cnf)))
+        (append (first rest-cnf) (find-subsumed-clauses first-fbf (rest rest-cnf)))))))
+      
+      
+  
+    
+; set-difference returns a list of elements of list-1 that do not appear in list-2.
+;  (setq lst1 (list "A" "b" "C" "d")
+;lst2 (list "a" "B" "C" "d"))
+; (set-difference lst1 lst2) =>  ("d" "C" "b" "A")
+; (set-difference lst1 lst2 :test 'equal) =>  ("b" "A")
 ;;
 ;;  EJEMPLOS:
 ;;
