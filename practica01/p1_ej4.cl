@@ -1020,47 +1020,39 @@
 ;; EVALUA A : FBF en FNC equivalente a cnf sin clausulas subsumidas 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun eliminate-subsumed-clauses (cnf) 
-  (eliminate-subsumed-clauses-rec cnf cnf)
-)
+  (eliminate-subsumed-clauses-rec cnf cnf))
 
 (defun eliminate-subsumed-clauses-rec (cnf cnf-original)
-  (if (null (rest cnf))
+  (if (null cnf)
       cnf-original
     (if (null (first-needs-removal? (first cnf) (rest cnf)))
         (append 
-         (first cnf) 
+         (list (first cnf)) 
          (intersection 
-          (find-subsumed-clauses (first cnf) (rest cnf)) 
-          (eliminate-subsumed-clauses (rest cnf)) 
+          (remove-subsumed-clauses (first cnf) (rest cnf)) 
+          (eliminate-subsumed-clauses-rec (rest cnf) cnf-original) 
           :test #'equal))
       (intersection 
-          (find-subsumed-clauses (first cnf) (rest cnf)) 
-          (eliminate-subsumed-clauses (rest cnf)) 
+          (remove-subsumed-clauses (first cnf) (rest cnf)) 
+          (eliminate-subsumed-clauses-rec (rest cnf) cnf-original) 
           :test #'equal))))
-  
 
 (defun first-needs-removal? (first-fbf rest-cnf)
   (if (null (first rest-cnf))
       nil
-    (let ((ss-result (subsume first-fbf (first rest-cnf))))
-        (if (equal ss-result first-fbf)
-            T
-          (or nil (first-needs-removal? first-fbf (rest rest-cnf))))))))
+    (if (null (subsume (first rest-cnf) first-fbf))
+        (or nil (first-needs-removal? first-fbf (rest rest-cnf)))
+      T)))
 
-(defun find-subsumed-clauses (first-fbf rest-cnf)
+(defun remove-subsumed-clauses (first-fbf rest-cnf)
   (if (null (first rest-cnf))
       '()
-    (let ((ss-result (subsume first-fbf (first rest-cnf))))
-        (if (equal ss-result first-fbf)
-            (append nil (find-subsumed-clauses first-fbf (rest rest-cnf)))
-        (append (first rest-cnf) (find-subsumed-clauses first-fbf (rest rest-cnf)))))))
-        
-    
-; set-difference returns a list of elements of list-1 that do not appear in list-2.
-;  (setq lst1 (list "A" "b" "C" "d")
-;lst2 (list "a" "B" "C" "d"))
-; (set-difference lst1 lst2) =>  ("d" "C" "b" "A")
-; (set-difference lst1 lst2 :test 'equal) =>  ("b" "A")
+    (if (null (subsume first-fbf (first rest-cnf)))
+        (append (list (first rest-cnf)) (remove-subsumed-clauses first-fbf (rest rest-cnf)))
+      (remove-subsumed-clauses first-fbf (rest rest-cnf)))))
+
+(first-needs-removal? '(c) '((b c) (a (~ c) b)  ((~ a) b) (a b (~ a)) (c b a)))
+(remove-subsumed-clauses '((~ c)) '((b c) (a (~ c) b)  ((~ a) b) (a b (~ a)) (c b a)))
 ;;
 ;;  EJEMPLOS:
 ;;
