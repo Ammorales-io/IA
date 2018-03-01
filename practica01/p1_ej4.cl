@@ -1174,6 +1174,35 @@
 (eliminate-tautologies '((a (~ a) b c)))
 ;; NIL
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EJERCICIO 4.2.7
+;; FUNCIONES AUXILIARES
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Función que devuelve la FNC
+;; sin literales repetidos.
+(defun fnc-sin-literales-repetidos (cnf)
+  (eliminate-repeated-literals cnf))
+
+;; Función que devuelve la FNC
+;; sin claúsulas repetidas.
+(defun fnc-sin-clausulas-repetidas (cnf)
+  (let ((cnf-1 (fnc-sin-literales-repetidos cnf)))
+    (eliminate-repeated-clauses cnf-1)))
+
+;; Función que devuelve la FNC 
+;; sin tautologías.
+(defun fnc-sin-tautologias (cnf)
+  (let ((cnf-2 (fnc-sin-clausulas-repetidas cnf)))
+    (eliminate-tautologies cnf-2)))
+
+;; Función que devuelve la FNC
+;; simplificada y sin cláusulas
+;; subsumidas.
+(defun get-fnc-simplificada (cnf)
+  (let ((cnf-3 (fnc-sin-tautologias cnf)))
+    (eliminate-subsumed-clauses cnf-3)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.3.7
 ;; simplifica FBF en FNC 
@@ -1188,10 +1217,10 @@
 ;;            y sin clausulas subsumidas
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun simplify-cnf (cnf) 
-  ;;
-  ;; 4.3.7 Completa el codigo
-  ;;
-  )
+  ;Obtiene la FNC simplificada aplicando 
+  ;las operaciones especificadas en
+  ;las funciones auxiliares.
+  (get-fnc-simplificada cnf))
 
 ;;
 ;;  EJEMPLOS:
@@ -1199,6 +1228,30 @@
 (simplify-cnf '((a a) (b) (a) ((~ b)) ((~ b)) (a b c a)  (s s d) (b b c a b)))
 ;; ((B) ((~ B)) (S D) (A)) ;; en cualquier orden
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EJERCICIO 4.4.1
+;; FUNCIÓN AUXILIAR  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; contains-pos-or-neg-literal (lit clause)
+;;;
+;;; Comprueba si el literal lit se encuentra en la
+;;; cláusula clause, ya sea en forma positiva o negativa.
+;;;
+;;; INPUT: lit: literal de la comprobación.
+;;;		   clause: cláusula donde se va a buscar.
+;;; OUTPUT: t si el literal se encuentra en clause, NIL si no.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun contains-pos-or-neg-literal (lit clause)
+  ;Si hemos llegado al final de la cláusula, 
+  ;el literal no está.
+  (if (null clause)
+	nil
+	(or (equal lit (first clause)) ;lit está en la cláusula.
+		(equal (list +not+ lit) (first clause)) ;(~ lit) está en la cláusula.
+		(contains-pos-or-neg-literal lit (rest clause))))) ;Si no se cumplen los casos anteriores, 
+														   ;buscamos el literal en el resto de la cláusula.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.4.1
@@ -1210,10 +1263,20 @@
 ;;            que no contienen el literal lambda ni ~lambda   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun extract-neutral-clauses (lambda cnf) 
-  ;;
-  ;; 4.4.1 Completa el codigo
-  ;;
-  )
+  ;Si hemos llegado al final de la FNC, no
+  ;hay más cláusulas que evaluar.
+  (if (null cnf)
+	nil
+    ;Sino, comprueba si el literal (positivo o negativo)
+	;está en la primera cláusula de la FNC.
+	(if (contains-pos-or-neg-literal lambda (first cnf))
+		;Si está, elimina la cláusula.
+	    (extract-neutral-clauses lambda (rest cnf))
+		;Si no está, construye una lista con la cláusula
+		;y el resto de elementos de la FNC.
+		(cons (first cnf)									  
+			  (extract-neutral-clauses lambda (rest cnf))))))
+
 
 ;;
 ;;  EJEMPLOS:
@@ -1237,6 +1300,32 @@
                            '((p (~ q) r) (p q) (r (~ s) p q) (a b p) (a (~ p) c) ((~ r) p s)))
 ;; NIL
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EJERCICIO 4.4.2
+;; FUNCIÓN AUXILIAR  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; contains-positive-literal (lit clause)
+;;;
+;;; Comprueba si el literal positivo lit 
+;;; se encuentra en la cláusula clause.
+;;;
+;;; INPUT: lit: literal de la comprobación.
+;;;		   clause: cláusula donde se va a buscar.
+;;; OUTPUT: t si el literal positivo se encuentra en clause, 
+;;; NIL si no.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun contains-positive-literal (lit clause)
+  ;Si hemos llegado al final de clause,
+  ;no hay más literales que comprobar.
+  (if (null clause)
+	nil
+	;Sino, comprueba si lit es igual al primer elemento de clause
+    ;o a algún elemento del resto de la cláusula.
+	(or (equal lit (first clause))
+		(contains-positive-literal lit (rest clause)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.4.2
 ;; Construye el conjunto de clausulas lambda-positivas para una FNC
@@ -1246,12 +1335,21 @@
 ;; EVALUA A : cnf_lambda^(+) subconjunto de clausulas de cnf 
 ;;            que contienen el literal lambda  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun extract-positive-clauses (lambda cnf) 
-  ;;
-  ;; 4.4.2 Completa el codigo
-  ;;
-  )
-
+(defun extract-positive-clauses (lambda cnf)
+  ;Si hemos llegado al final de la FNC,
+  ;no hay más cláusulas que analizar.
+  (if (null cnf)
+	nil
+	;Si aún quedan cláusulas, comprueba si no contienen 
+	;literales positivos lambda.
+	;En ese caso ignorará la cláusula y avanzará en la FNC.
+	(if (null (contains-positive-literal lambda (first cnf)))
+		(extract-positive-clauses lambda (rest cnf))
+		;Si hay literales positivos lambda en la FNC,
+		;construye una lista con la cláusula y el resto de
+		;elementos de la FNC.
+		(cons (first cnf)
+			  (extract-positive-clauses lambda (rest cnf))))))
 ;;
 ;;  EJEMPLOS:
 ;;
@@ -1272,6 +1370,32 @@
                              '(((~ p) (~ q) r) ((~ p) q) (r (~ s) (~ p) q) (a b (~ p)) ((~ r) (~ p) s)))
 ;; NIL
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EJERCICIO 4.4.3
+;; FUNCIÓN AUXILIAR  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; contains-negative-literal (lit clause)
+;;;
+;;; Comprueba si el literal lit se encuentra
+;;; en forma negativa (~ lit) en la cláusula clause.
+;;;
+;;; INPUT: lit: literal de la comprobación.
+;;;		   clause: cláusula donde se va a buscar.
+;;; OUTPUT: t si el literal negativo se encuentra en clause, 
+;;; NIL si no.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun contains-negative-literal (lit clause)
+  ;Si hemos llegado al final de clause,
+  ;no hay más literales que comprobar.
+  (if (null clause)
+	nil
+	;Sino, comprueba si (~ lit) es igual al primer elemento 
+	;de clause o a algún elemento del resto de la cláusula.
+	(or (equal (list +not+ lit) (first clause))
+		(contains-negative-literal lit (rest clause)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.4.3
 ;; Construye el conjunto de clausulas lambda-negativas para una FNC 
@@ -1281,11 +1405,21 @@
 ;; EVALUA A : cnf_lambda^(-) subconjunto de clausulas de cnf  
 ;;            que contienen el literal ~lambda  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun extract-negative-clauses (lambda cnf) 
-  ;;
-  ;; 4.4.3 Completa el codigo
-  ;;
-  )
+(defun extract-negative-clauses (lambda cnf)
+  ;Si hemos llegado al final de la FNC,
+  ;no hay más cláusulas que analizar.
+  (if (null cnf)
+	nil
+	;Si aún quedan cláusulas, comprueba si no contienen 
+	;literales negativos (~ lambda).
+	;En ese caso ignorará la cláusula y avanzará en la FNC.
+	(if (null (contains-negative-literal lambda (first cnf)))
+		(extract-negative-clauses lambda (rest cnf))
+		;Si hay literales negativos (~ lambda) en la FNC,
+		;construye una lista con la cláusula y el resto de
+		;elementos de la FNC.
+		(cons (first cnf)
+			  (extract-negative-clauses lambda (rest cnf))))))
 
 ;;
 ;;  EJEMPLOS:
