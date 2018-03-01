@@ -892,27 +892,86 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.3.2
+;; FUNCIONES AUXILIARES
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; check-if-equal (cls target-cls)
+;;;
+;;; Comprueba si una cláusula es igual que otra que está en 
+;;; la FNC, se representen de manera idéntica o diferente. 
+;;; Por ejemplo, '(a b c) = '(b a c)
+;;;
+;;; INPUT: cls: cláusula 1 de la comprobación.
+;;; 	   target-cls: cláusula 2 de la comprobación.
+;;; OUTPUT: T si son iguales, NIL si no.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun check-if-equal (cls target-cls)
+  ;O las cláusulas se representan textualmente 
+  ;de igual forma (por ejemplo, '(a b c) '(a b c))
+  (or (equal cls target-cls)
+	  ;O, pese a representarse de forma distinta, 
+	  ;ambas contienen los mismos elementos
+	  ;(por ejemplo, '(a b c) '(b a c)).
+	  (and (null (set-difference cls target-cls :test #'equal))
+		   (null (set-difference target-cls cls :test #'equal)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; check-if-repeated-in-cnf (clause cnf)
+;;;
+;;; Comprueba si la cláusula clause está repetida en
+;;; la FNC pasada como argumento.
+;;;
+;;; INPUT: clause: cláusula que se va a comprobar.
+;;; 	   cnf: FNC que puede o no contener cláusulas repetidas.
+;;; OUTPUT: T si hay coincidencias, NIL si no.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun check-if-repeated-in-cnf (clause cnf)
+  ;Si hemos llegado al final de la FNC,
+  ;clause no está repetida.
+  (if (null cnf)
+	nil
+	;Si aún no hemos llegado al final:
+	(or (check-if-equal clause (first cnf))		;O coinciden clause y el primer elemento de cnf.
+	    (check-if-repeated-in-cnf clause (rest cnf))))) ;O hay coincidencias con alguno del resto
+														;de elementos de cnf.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; get-cnf-without-repeated-clauses (cnf)
+;;;
+;;; Devuelve una FNC sin cláusulas repetidas.
+;;;
+;;; INPUT: cnf: FNC que puede o no contener cláusulas repetidas.
+;;; OUTPUT: FNC sin cláusulas repetidas.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun get-cnf-without-repeated-clauses (cnf)
+	(cond
+	  ;Si hemos llegado al final de FNC, 
+	  ;no hay más cláusulas repetidas que filtrar.
+	  ((null cnf)
+		nil)
+	  ;Comprueba si la cláusula coincide con alguno de los
+	  ;elementos de la FNC. Si coincide, avanza en la FNC.
+	  ((check-if-repeated-in-cnf (first cnf) (rest cnf))
+		(get-cnf-without-repeated-clauses (rest cnf)))
+	  ;Si no hay coincidencias, crea una lista con el 
+	  ;elemento único y el resto de la FNC filtrada.
+	  (t (cons (first cnf)
+			   (get-cnf-without-repeated-clauses (rest cnf))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EJERCICIO 4.3.2
 ;; eliminacion de clausulas repetidas en una FNC 
 ;; 
 ;; RECIBE   : cnf - FBF en FNC (lista de clausulas, conjuncion implicita)
 ;; EVALUA A : FNC equivalente sin clausulas repetidas 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun eliminate-repeated-clauses (cnf)
-  ;Cláusula sin literales repetidos.
-  (let ((no-rep-clause (mapcar #'eliminate-repeated-literals cnf)))
+  ;Obtiene la FNC sin literales repetidos en sus cláusulas.
+  (let ((no-rep-cnf (mapcar #'eliminate-repeated-literals cnf)))
+	;Obtiene la FNC sin cláusulas repetidas.
+	(get-cnf-without-repeated-clauses no-rep-cnf)))
 
-;Comprueba si una cláusula es igual que otra 
-;que está en la FNC, se representen de manera
-;idéntica o diferente. Por ejemplo, '(a b c) = '(b a c)
-(defun check-if-equal (cls target-cls)
-  (cond
-	((equal cls target-cls)
-		t)
-	((and (null (set-difference cls target-cls :test #'equal))
-		  (null (set-difference target-cls cls :test #'equal)))
-		t)
-	(t NIL)))
-	
 ;;
 ;; EJEMPLO:
 ;;
@@ -928,10 +987,10 @@
 ;;            NIL en caso contrario
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun subsume (K1 K2)
-  ;;
-  ;; 4.3.3 Completa el codigo
-  ;;
-  )
+  ;Mientras K1 sea subconjunto de K2, la función
+  ;devolverá una lista con K1.
+  (when (subsetp K1 K2 :test #'equal)
+	(list K1)))
   
 ;;
 ;;  EJEMPLOS:
@@ -961,9 +1020,11 @@
 ;; EVALUA A : FBF en FNC equivalente a cnf sin clausulas subsumidas 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun eliminate-subsumed-clauses (cnf) 
-  ;;
-  ;; 4.3.4 Completa el codigo
-  ;;
+  ; set-difference returns a list of elements of list-1 that do not appear in list-2.
+  ;  (setq lst1 (list "A" "b" "C" "d")
+          ;lst2 (list "a" "B" "C" "d"))
+  ; (set-difference lst1 lst2) =>  ("d" "C" "b" "A")
+  ; (set-difference lst1 lst2 :test 'equal) =>  ("b" "A")
 )
 
 ;;
@@ -979,6 +1040,58 @@
  '((a b c) (b c) (a (~ c) b) ((~ a))  ((~ a) b) (a b (~ a)) (c b a)))
 ;;; ((A (~ C) B) ((~ A)) (B C))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EJERCICIO 4.3.5
+;; FUNCIONES AUXILIARES
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; literals-with-same-component lit1 lit2)
+;;;
+;;; Comprueba si 2 literales en forma positiva y negativa
+;;; tienen el mismo componente (por ejemplo, p y (~ p))
+;;;
+;;; INPUT: lit1: literal 1 de la comprobación.
+;;;		   lit2: literal 2 de la comprobación.
+;;; OUTPUT: t si tienen el mismo componente, NIL si no.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun literals-with-same-component (lit1 lit2)
+  (cond
+	;CASO 1: El literal es positivo.
+	;Comprueba si (~ lit1) tiene el mismo componente
+	;que el literal negativo (~ lit2).
+	((positive-literal-p lit1)
+		(equal (list +not+ lit1) lit2))
+	;CASO 2: El literal es negativo.
+	;Comprueba si lit1 tiene el mismo componente
+	;que el literal positivo lit2.
+	((negative-literal-p lit1)
+		(equal (second lit1) lit2))
+	;Los literales no tienen el mismo componente.
+	(t NIL)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; check-if-pos-and-neg (lit1 K)
+;;;
+;;; Comprueba si en una cláusula K hay un literal positivo lit1
+;;; y otro negativo (~ lit1) o vice versa.
+;;;
+;;; INPUT: lit1: literal 1 de la comprobación.
+;;;		   lit2: literal 2 de la comprobación.
+;;; OUTPUT: t si tienen el mismo componente, NIL si no.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun check-if-pos-and-neg (lit K)
+  ;Si hemos llegado al final de K,
+  ;no hay un literal positivo y otro negativo.
+  (if (null K)
+	nil
+	;Sino, comprueba que el literal tiene el mismo componente
+	;que el primer elemento de K o que alguno de los elementos 
+	;del resto de K.
+	(or (literals-with-same-component lit (first K))
+		(check-if-pos-and-neg lit (rest K)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.3.5
 ;; Predicado que determina si una clausula es tautologia
@@ -987,11 +1100,16 @@
 ;; EVALUA a : T si K es tautologia
 ;;            NIL en caso contrario
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun tautology-p (K) 
-  ;;
-  ;; 4.3.5 Completa el codigo
-  ;;
-  )
+(defun tautology-p (K)
+  ;Si la cláusula es vacía o tiene sólo un elemento,
+  ;su valor de verdad es F.
+  (if (or (null K) (null (rest K)))
+	nil
+	;Sino, comprueba si hay algún literal positivo
+	;y negativo con el mismo componente en K.
+	(or (check-if-pos-and-neg (first K) (rest K))
+		(tautology-p (rest K)))))
+
 
 ;;
 ;;  EJEMPLOS:
@@ -1007,10 +1125,18 @@
 ;; EVALUA A : FBF en FNC equivalente a cnf sin tautologias 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun eliminate-tautologies (cnf) 
-  ;;
-  ;; 4.3.6 Completa el codigo
-  ;;
-  )
+  ;Si hemos llegado al final de la FNC, 
+  ;no hay más cláusulas que evaluar.
+  (if (null cnf)
+	nil
+	;Sino, comprueba si cada cláusula de la FNC es una tautología.
+	(if (tautology-p (first cnf))
+	   ;Si lo es, se elimina.
+	   (eliminate-tautologies (rest cnf))
+	   ;En caso contrario, construye una lista con la cláusula 
+	   ;que no es tautología y el resto de la FNC.
+	   (cons (first cnf)				  			
+			 (eliminate-tautologies (rest cnf))))))
 
 ;;
 ;;  EJEMPLOS:
