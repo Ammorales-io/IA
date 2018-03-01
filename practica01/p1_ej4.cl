@@ -1026,7 +1026,7 @@
 (defun eliminate-subsumed-clauses-rec (cnf cnf-original)
   (if (null (rest cnf))
       cnf-original
-    (if (null (first-needs removal (first cnf) (rest cnf)))
+    (if (null (first-needs-removal? (first cnf) (rest cnf)))
         (append 
          (first cnf) 
          (intersection 
@@ -1054,9 +1054,7 @@
         (if (equal ss-result first-fbf)
             (append nil (find-subsumed-clauses first-fbf (rest rest-cnf)))
         (append (first rest-cnf) (find-subsumed-clauses first-fbf (rest rest-cnf)))))))
-      
-      
-  
+        
     
 ; set-difference returns a list of elements of list-1 that do not appear in list-2.
 ;  (setq lst1 (list "A" "b" "C" "d")
