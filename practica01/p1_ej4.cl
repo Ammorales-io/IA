@@ -465,8 +465,7 @@
 		  ;En caso contrario, devuelve una lista de tipo
 		  ;(<conector> <FBFs sin <=>>)
           (cons connector 
-              (mapcar #'eliminate-biconditional (rest wff)))))))
-				
+              (mapcar #'eliminate-biconditional (rest wff)))))))		
 
 ;;
 ;; EJEMPLOS:
@@ -1277,7 +1276,6 @@
 		(cons (first cnf)									  
 			  (extract-neutral-clauses lambda (rest cnf))))))
 
-
 ;;
 ;;  EJEMPLOS:
 ;;
@@ -1439,6 +1437,53 @@
                              '(( p (~ q) r) ( p q) (r (~ s) p q) (a b p) ((~ r) p s)))
 ;; NIL
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EJERCICIO 4.4.4
+;; FUNCIONES AUXILIARES
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; resolvable-clauses-p (lambda K1 K2)
+;;;
+;;; Comprueba si dos cláusulas K1 y K2 se pueden resolver.
+;;;
+;;; INPUT: lambda: literal de la comprobación.
+;;;		   K1: cláusula simplificada 1 de la comprobación.
+;;;		   K2: cláusula simplificada 2 de la comprobación.
+;;; OUTPUT: t si K1 y K2 se pueden resolver, NIL si no.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun resolvable-clauses-p (lambda K1 K2)
+  ;O K1 tiene el literal lambda positivo y K2
+  ;tiene el literal lambda negativo.
+  (or (and (contains-positive-literal lambda K1)
+		   (contains-negative-literal lambda K2))
+      ;O viceversa.
+	  (and (contains-positive-literal lambda K2)
+		   (contains-negative-literal lambda K1))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; get-resolved-clause (lambda K)
+;;;
+;;; Devuelve una cláusula K resuelta sobre lambda.
+;;;
+;;; INPUT: lambda: literal sobre el que se va a 
+;;;        resolver la cláusula.
+;;;		   K: cláusula que re va a resolver.
+;;; OUTPUT: Cláusula resuelta o NIL si K no contiene a lambda.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun get-resolved-clause (lambda K)
+  (cond
+	;CASO 1: K contiene al literal positivo lambda.
+	;Todas las ocurrencias de lambda se eliminan de K.
+	((contains-positive-literal lambda K)
+	 (remove lambda K :test #'equal))
+	;CASO 2: K contiene al literal negativo (~ lambda).
+	;Todas las ocurrencias de (~ lambda) se eliminan de K.
+    ((contains-negative-literal lambda K)
+	 (remove (list +not+ lambda) K :test #'equal))
+    (t NIL))) ;No debería llegar a este caso nunca.
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.4.4
 ;; resolvente de dos clausulas
@@ -1451,11 +1496,23 @@
 ;;                          sobre K1 y K2, con los literales repetidos 
 ;;                          eliminados
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun resolve-on (lambda K1 K2) 
-  ;;
-  ;; 4.4.4 Completa el codigo
-  ;;
-  )
+(defun resolve-on (lambda K1 K2)
+  ;Si K1 o K2 son NIL, no hay nada que resolver.
+  (if (or (null K1)
+          (null K2))
+	nil
+	;Siempre que K1 o K2 tengan el literal lambda
+	;en forma positiva o negativa:
+    (when (resolvable-clauses-p lambda K1 K2)
+	  ;Obtiene las cláusulas resueltas.
+	  (let ((resolved-K1 (get-resolved-clause lambda K1))
+			(resolved-K2 (get-resolved-clause lambda K2)))
+		;Si al resolver K1 y K2 ambas devuelven NIL, 
+		;crea una lista de tipo (NIL).
+		;Sino, devolverá la unión entre las cláusulas resueltas.
+		(if (and (null resolved-K1) (null resolved-K2))
+			(list NIL)
+			(union resolved-K1 resolved-K2))))))
 
 ;;
 ;;  EJEMPLOS:
