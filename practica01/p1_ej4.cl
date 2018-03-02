@@ -1243,14 +1243,13 @@
 ;;; OUTPUT: t si el literal se encuentra en clause, NIL si no.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun contains-pos-or-neg-literal (lit clause)
-  ;Si hemos llegado al final de la cláusula, 
-  ;el literal no está.
+  ;Si clause es NIL, no hay literal que buscar.
   (if (null clause)
 	nil
-	(or (equal lit (first clause)) ;lit está en la cláusula.
-		(equal (list +not+ lit) (first clause)) ;(~ lit) está en la cláusula.
-		(contains-pos-or-neg-literal lit (rest clause))))) ;Si no se cumplen los casos anteriores, 
-														   ;buscamos el literal en el resto de la cláusula.
+	;O encuentra el literal lit en forma positiva dentro de clause.
+    (or (not (null (member lit clause :test #'equal)))
+		;O encuentra el literal lit en forma negativa dentro de clause.
+		(not (null (member (list +not+ lit) clause :test #'equal))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.4.1
@@ -1315,14 +1314,12 @@
 ;;; NIL si no.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun contains-positive-literal (lit clause)
-  ;Si hemos llegado al final de clause,
-  ;no hay más literales que comprobar.
+  ;Si clause es NIL, no hay literal que buscar.
   (if (null clause)
 	nil
-	;Sino, comprueba si lit es igual al primer elemento de clause
-    ;o a algún elemento del resto de la cláusula.
-	(or (equal lit (first clause))
-		(contains-positive-literal lit (rest clause)))))
+	;Sino, comprueba si lit se encuentra entre alguno
+	;de los elementos de clause.
+	(not (null (member lit clause :test #'equal)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.4.2
@@ -1385,14 +1382,12 @@
 ;;; NIL si no.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun contains-negative-literal (lit clause)
-  ;Si hemos llegado al final de clause,
-  ;no hay más literales que comprobar.
+  ;Si clause es NIL, no hay literal que buscar.
   (if (null clause)
 	nil
-	;Sino, comprueba si (~ lit) es igual al primer elemento 
-	;de clause o a algún elemento del resto de la cláusula.
-	(or (equal (list +not+ lit) (first clause))
-		(contains-negative-literal lit (rest clause)))))
+	;Sino, comprueba si (~ lit) se encuentra entre alguno
+	;de los elementos de clause.
+    (not (null (member (list +not+ lit) clause :test #'equal)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.4.3
@@ -1469,7 +1464,7 @@
 ;;;
 ;;; INPUT: lambda: literal sobre el que se va a 
 ;;;        resolver la cláusula.
-;;;		   K: cláusula que re va a resolver.
+;;;		   K: cláusula que se va a resolver.
 ;;; OUTPUT: Cláusula resuelta o NIL si K no contiene a lambda.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun get-resolved-clause (lambda K)
@@ -1539,6 +1534,70 @@
 (resolve-on 'p '(a b (~ c)) '(p b a q r s))
 ;; NIL
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EJERCICIO 4.4.5
+;; FUNCIONES AUXILIARES
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; get-list-of-resolved-clauses (lambda K clause-set)
+;;;
+;;; Devuelve una lista de cláusulas resueltas entre K y cada
+;;; uno de los elementos de clause-set (conjunto/lista de cláusulas).
+;;;
+;;; INPUT: lambda: literal sobre el que se va a 
+;;;        		   resolver la cláusula.
+;;;		   K: cláusula que se va a resolver.
+;;;		   clause-set: Conjunto de cláusulas; cada una se resolverá
+;;;		   			   con K sobre lambda.
+;;; OUTPUT: Lista de cláusulas resueltas sobre lambda.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun get-list-of-resolved-clauses (lambda K clause-set)
+  ;Si hemos llegado al final del conjunto de cláusulas,
+  ;no hay más resoluciones que hacer.
+  (if (null clause-set)
+	nil
+	;Resuelve K y la primera cláusula del conjunto sobre lambda.
+	(let ((resolved-clause (resolve-on lambda K (first clause-set))))
+	  ;Si la cláusula resuelta tiene el valor '(NIL), 
+	  ;no hay más cláusulas que resolver.
+	  (if (equal resolved-clause '(NIL))
+		resolved-clause
+		;Sino, construye una lista de cláusulas resueltas, sin 
+	    ;literales repetidos.
+	    (cons (eliminate-repeated-literals resolved-clause)
+		      (get-list-of-resolved-clauses lambda K (rest clause-set)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; get-all-resolved-clauses (lambda positive-clauses negative-clauses)
+;;;
+;;; Devuelve una lista de resoluciones entre cada cláusula
+;;; del conjunto lambda-positivo y cada cláusula del conjunto
+;;; lambda-negativo.
+;;;
+;;; INPUT: lambda: literal sobre el que se van a 
+;;;        		   resolver las cláusulas.
+;;;		   positive-clauses: conjunto de cláusulas lambda-positivas.
+;;;		   negative-clauses: conjunto de cláusulas lambda-negativas.
+;;; OUTPUT: Lista de todas las cláusulas resueltas entre ambos
+;;;         conjuntos.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun get-all-resolved-clauses (lambda positive-clauses negative-clauses)
+  ;Si hemos llegado al final del conjunto de cláusulas
+  ;positivas, no hay más resoluciones que hacer.
+  (if (null positive-clauses)
+	nil
+	  ;Sino, hace la unión entre: 
+
+	  ;    * Las resoluciones entre la primera cláusula 
+      ;      positiva y el conjunto de cláusulas negativas.
+	  ;    * Las resoluciones del resto de cláusulas positivas
+      ;      con el conjunto de cláusulas negativas.
+	  (eliminate-repeated-clauses
+		(union
+		  (get-list-of-resolved-clauses lambda (first positive-clauses) negative-clauses)
+		  (get-all-resolved-clauses lambda (rest positive-clauses) negative-clauses)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4.4.5
 ;; Construye el conjunto de clausulas RES para una FNC 
@@ -1549,10 +1608,21 @@
 ;; EVALUA A : RES_lambda(cnf) con las clauses repetidas eliminadas
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun build-RES (lambda cnf)
-  ;;
-  ;; 4.4.5 Completa el codigo
-  ;;
-)
+  ;Si hemos llegado al final de la FNC,
+  ;no hay más resoluciones que hacer.
+  (if (null cnf)
+	nil
+	;Obtiene los conjuntos de cláusulas 
+	;positivas, negativas y neutras.
+	(let ((positive-clauses (extract-positive-clauses lambda cnf))
+		  (negative-clauses (extract-negative-clauses lambda cnf))
+		  (neutral-clauses (extract-neutral-clauses lambda cnf)))
+	  ;Une las cláusulas neutras con el resultado de resolver entre 
+      ;el conjunto de cláusulas positivas y el conjunto de cláusulas
+      ;negativas sobre lambda.
+	  (eliminate-repeated-clauses
+	    (union neutral-clauses
+			   (get-all-resolved-clauses lambda positive-clauses negative-clauses))))))
 
 ;;
 ;;  EJEMPLOS:
