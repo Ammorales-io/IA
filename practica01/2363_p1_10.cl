@@ -319,6 +319,8 @@
       nil
     (cons (list elt (first lst)) (combine-elt-lst elt (rest lst)))))
 
+(combine-elt-lst 'a nil) ;; --> NIL
+(combine-elt-lst 'a '(1 2 3)) ;; --> ((A 1) (A 2) (A 3))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;; Apartado 3.2 ;;;
@@ -339,13 +341,14 @@
     nil
     (append (combine-elt-lst (first lst1) lst2) (combine-lst-lst (rest lst1) lst2))))
 
+(combine-lst-lst nil nil) ;; --> NIL
+(combine-lst-lst '(a b c) nil) ;; --> NIL
+(combine-lst-lst NIL '(a b c)) ;; --> NIL
+(combine-lst-lst '(a b c) '(1 2)) ;; --> ((A 1) (A 2) (B 1) (B 2) (C 1) (C 2))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;; Apartado 3.3 ;;;
 ;;;;;;;;;;;;;;;;;;;;
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; combine-list-of-lst (lstolsts) 
@@ -358,9 +361,107 @@
 ;;; OUTPUT: Listado con el producto cartesiano de los elementos de los sublistados
 ;;;
 (defun combine-list-of-lsts (lstolsts)
-  (if (null (rest lstolsts))
-      (first lstolsts)
-    (reduce #'cons (reduce #'append (append (first lstolsts) (combine-list-of-lsts (rest lstolsts)))))))
+  (if (null lstolsts)
+      nil
+    (mapcar #'combine-elt-lst (first lstolsts) (combine-list-of-lsts (rest lstolsts)))))
+
+(combine-list-of-lsts '(() (+ -) (1 2 3 4))) ;; --> NIL
+(combine-list-of-lsts '((a b c) () (1 2 3 4))) ;; --> NIL
+(combine-list-of-lsts '((a b c) (1 2 3 4) ())) ;; --> NIL
+(combine-list-of-lsts '((1 2 3 4))) ;; --> ((1) (2) (3) (4))
+(combine-list-of-lsts '((a b c) (+ -) (1 2 3 4)))
+;; --> ((A + 1) (A + 2) (A + 3) (A + 4) (A - 1) (A - 2) (A - 3) (A - 4)
+;; (B + 1) (B + 2) (B + 3) (B + 4) (B - 1) (B - 2) (B - 3) (B - 4)
+;; (C + 1) (C + 2) (C + 3) (C + 4) (C - 1) (C - 2) (C - 3) (C - 4))
 
 
-	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;  EJERCICIO 5  ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;
+;;; Apartado 5.4 ;;;
+;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Breadth-first-search in graphs
+;;;
+;;;
+;;; INPUT:	end: nodo destino de nuestra búsqueda
+;;;		queue: cola con los caminos de búsqueda
+;;;		net: lista representativa de nuestra red de nodos
+;;; OUTPUT:	lista con el camino más corto al nodo destino
+(defun bfs (end queue net)
+  (if (null queue)
+      ;;Establecemos '() como caso base
+      '()
+    ;Cogemos el primer camino de la cola
+    (let* ((path (first queue)) 
+           ;Reconocemos el primer elemento del camino como el nodo
+           (node (first path))) 
+      (if (eql node end)
+          ;Si hemos contrado el nodo destino, devolvemos el la inversa del camino evaluado actual
+          (reverse path) 	
+        ;Si no, metemos todos los caminos a los que se puede llegar desde el nodo identificado en la cola
+        (bfs end
+             (append (rest queue)
+                     (new-paths path node net))
+             net))))) 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; new-paths
+;;
+;; INPUT: 	path: camino actual
+;;		node: nodo actual
+;;		net: lista representativa de nuestra red de nodos
+;; OUTPUT:	lista de nodos a los que se puede llegar desde el nodo actual
+(defun new-paths (path node net)
+  (mapcar #'(lambda(n)
+              (cons n path))
+    (rest (assoc node net)))) 	;; Genera caminos nuevos juntando el camino previo a todos aquellos
+				;; con todos aquellos nodos accesibles desde el nodo actual
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;
+;;; Apartado 5.5 ;;;
+;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Shortest-path through Breadth-first-search in graphs
+;;;
+;;; Encuentra el menor camino dado que introduce el primer nodo 
+;;; en el grafo y ejecuta una búsqueda de anchura hasta el nodo
+;;; destino, la cual, por defecto, encontrará el camino uno de
+;;; (o el) caminos con menor longitud.
+;;;
+;;;
+;;; INPUT:	start: nodo origen de nuestra búsqueda
+;;;		end: nodo destino de nuestra búsqueda
+;;;		net: lista representativa de nuestra red de nodos
+;;; OUTPUT:	lista con el camino más corto al nodo destino
+(defun shortest-path (start end net)
+  (bfs end (list (list start)) net))
+
+;;;;;;;;;;;;;;;;;;;;
+;;; Apartado 5.6 ;;;
+;;;;;;;;;;;;;;;;;;;;
+
+(shortest-path 'a 'f '((a d) (b d f) (c e) (d f) (e b f) (f)))
+;; --> (A D F)
+;;  
+;; Este resultado sucede porque
+
+
+;;;;;;;;;;;;;;;;;;;;
+;;; Apartado 5.7 ;;;
+;;;;;;;;;;;;;;;;;;;;
+
+(shortest-path 'f 'c '((a b c d e) (b a d e f) (c a g) (d a b g h) (e a b g h) (f b h) (g c d e h) (h d e f g)))
+
+;;;;;;;;;;;;;;;;;;;;
+;;; Apartado 5.8 ;;;
+;;;;;;;;;;;;;;;;;;;;
+
