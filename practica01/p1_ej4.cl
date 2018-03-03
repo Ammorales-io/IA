@@ -568,11 +568,11 @@
         ;evalúa cada una de las FBFs en caso de que se necesite reducir
         ;el ámbito de ~.
         (cons connector
-              (mapcar #'reduce-scope-of-negation (rest wff)))))))  
+              (mapcar #'reduce-scope-of-negation (rest wff)))))))
 
 ;;
 ;;  EJEMPLOS:
-;;
+;;(r(
 (reduce-scope-of-negation '(~ (v p (~ q) r))) 
 ;;; (^ (~ P) Q (~ R))
 (reduce-scope-of-negation '(~ (^ p (~ q) (v  r s (~ a))))) 
@@ -1651,26 +1651,54 @@
 ;; EVALUA A :	T  si cnf es SAT
 ;;                NIL  si cnf es UNSAT
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun  RES-SAT-p (cnf) 
-  ;;
-  ;; 4.5 Completa el codigo
-  ;;
-  )
+(defun  RES-SAT-p (cnf)
+  (if (null cnf)
+      ; Registramos el caso de la tautología. 
+      T
+    (if (null (check-4-empty-clause cnf))
+        (RES-SAT-p-rec cnf (make-literal-list cnf))
+      nil)))
 
-;Comprueba si un literal de una cláusula
-;está en la lista de literales distintos.
-(defun literal-on-list-p (lit lst)
-  (if (null lst)
-	nil
-	(cond
-	  ((positive-literal-p lit)
-		(or (equal lit (first lst))
-			(literal-on-list-p lit (rest lst))))
-	  ((negative-literal-p lit)
-		(or (equal (second lit) (first lst))
-			(literal-on-list-p lit (rest lst))))
-	  (t NIL))))
 
+(defun RES-SAT-p-rec(cnf list)
+  (if (null list)
+      (if (null cnf)
+          T
+        nil)
+    (RES-SAT-p-rec 
+     (simplify-cnf (build-RES (first list) cnf))
+     (rest list))))
+  
+
+(defun make-literal-list (cnf)
+  (eliminate-repeated-literals
+          (happiness
+           (reduce #'union cnf))))
+
+(defun happiness (list)
+  (if (null list)
+      nil
+    (cons 
+     (make-positive (first list))
+     (happiness (rest list)))))
+                    
+  
+(defun make-positive (atom)
+  (if (positive-literal-p atom)
+      atom
+    (second atom)))
+
+(defun check-4-empty-clause (cnf)
+  (if (null cnf)
+      nil
+    (if (null (first cnf))
+        T
+      (or 
+       (check-4-empty-clause 
+        (rest cnf))))))
+(reduce-scope-of-negation (cons +not+ (wff-infix-to-cnf '(~ a))))
+(RES-SAT-p '((A) (P Q) ((~ P) (~ A)) ((~ P) B) (P R) (P (~ Q)))) 
+    
 ;;
 ;;  EJEMPLOS:
 ;;
@@ -1705,10 +1733,33 @@
 ;;            NIL en caso de que no sea consecuencia logica.  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun logical-consequence-RES-SAT-p (wff w)
-  ;;
-  ;; 4.6 Completa el codigo
-  ;;
-  )
+  (if (null (RES-SAT-p
+   (union
+    (wff-infix-to-cnf wff)
+    (reduce-scope-of-negation-cnf (cons +not+ (wff-infix-to-cnf w))))))
+      T
+    nil))
+
+(defun reduce-scope-of-negation-cnf (cnf)
+  (if (null cnf)
+      nil
+    (if (equal +not+ (first cnf))
+        (apply-negation (rest cnf))
+      cnf)))
+  
+(defun apply-negation(cls)
+  (if (null cls)
+      nil
+    (if (literal-p (first cls))
+        (append (invert (first cls)) (apply-negation (rest cls)))
+      (append (apply-negation (first cls)) (apply-negation (rest cls))))))
+
+(defun invert (lit)
+  (if (positive-literal-p lit)
+      (list +not+ lit)
+    (second lit)))
+
+(reduce-scope-of-negation-cnf (cons +not+ (wff-infix-to-cnf 'a)))
 
 ;;
 ;;  EJEMPLOS:
@@ -1725,7 +1776,7 @@
 ;; T
 
 (logical-consequence-RES-SAT-p '((p => q) ^ p) 'q)
-;; T
+;; T!!
 
 (logical-consequence-RES-SAT-p '((p => q) ^ p) '(~q))
 ;; NIL
@@ -1748,7 +1799,7 @@
 (logical-consequence-RES-SAT-p 
  '(((~ p) => q) ^ (p => ((~ a) ^ b)) ^ ( (~ p) => (r  ^ (~ q)))) 
  '(~ a))
-;; T
+;; T!!
 
 (logical-consequence-RES-SAT-p 
  '(((~ p) => q) ^ (p <=> ((~ a) ^ b)) ^ ( (~ p) => (r  ^ (~ q)))) 
