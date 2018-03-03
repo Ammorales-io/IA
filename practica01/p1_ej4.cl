@@ -1657,6 +1657,20 @@
   ;;
   )
 
+;Comprueba si un literal de una cláusula
+;está en la lista de literales distintos.
+(defun literal-on-list-p (lit lst)
+  (if (null lst)
+	nil
+	(cond
+	  ((positive-literal-p lit)
+		(or (equal lit (first lst))
+			(literal-on-list-p lit (rest lst))))
+	  ((negative-literal-p lit)
+		(or (equal (second lit) (first lst))
+			(literal-on-list-p lit (rest lst))))
+	  (t NIL))))
+
 ;;
 ;;  EJEMPLOS:
 ;;
