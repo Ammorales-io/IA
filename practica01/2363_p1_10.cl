@@ -132,40 +132,88 @@
 ;;; Apartado 1.3 ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; crea-vectores-class (cats texts func)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; crea-vectores-similares (cats text func)
 ;;;
-;;; Devuelve un vector de vectores con el identificador 
-;;; de la categoria y el resultado de la similitud coseno
-;;; entre la categoria y cada vector de texts.
-;;; Sin ordenar.
+;;; Devuelve una lista de listas con elementos de tipo:
+;;; ((<id-cat-1> <sc-1>) (<id-cat-2> <sc-2>) ... (<id-cat-n> <sc-n>))
+;;; 
+;;; Siendo <id-cat> un identificador de categoria que pertenece a
+;;; cats y <sc-n> el resultado de la similitud coseno entre el vector 
+;;; text y dicha categoría.
 ;;;
 ;;; INPUT: cats: vector de vectores, representado como una lista de listas
-;;; 	   texts: vector de vectores, representado como una lista de listas
+;;; 	   text: vector que representa un texto, representado como una lista
 ;;; 	   func: función para evaluar la similitud coseno
-;;; OUTPUT: Pares identificador de categoría con resultado de similitud coseno, sin ordenar
-;;;
-(defun crea-vectores-class (cats texts func)
-  (if (null texts)
-      nil
-    ; Crea pares (id_categoria similitud_coseno) con la categoria
-    ; pasada como argumento y cada elemento del vector de vectores texts
-    (append (list (list (first cats) (funcall func (rest cats) (rest (first texts))))) (crea-vectores-class cats (rest texts) func))))
+;;; OUTPUT: Pares identificador de categoría con resultado de 
+;;; similitud coseno, sin ordenar
+(defun crea-vectores-similares (cats text func)
+  ;Si hemos llegado al final del vector de categorías,
+  ;no hay más cálculos que hacer.
+  (if (null cats)
+	nil
+	;Sino, obtiene el id de la categoría, el
+	;vector categoría actual y el vector texto actual.
+	(let ((id_categoria (first (first cats)))
+		  (categoria (rest (first cats)))
+		  (texto (rest text)))
+	  ;Construye una lista con pares de tipo 
+	  ;(<id-categoria> <similitud-coseno>).
+	  (cons (list id_categoria (funcall func categoria texto)) 
+			(crea-vectores-similares (rest cats) text func)))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;sc;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; select-vector-class (cats texts func)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; vector-mas-similar-rec (elem vectors)
 ;;;
-;;; A partir de un vector de vectores compuesto por el identificador
-;;; de la categoria y el resultado de la similitud coseno, selecciona
-;;; el par (id sc) con mayor similitud coseno.
+;;; Devuelve el par (<id-categoria> <similitud-coseno>) con mayor
+;;; similitud coseno de un vector de vectores con ese formato
+;;; de elementos.
+;;;
+;;; El parámetro elem contiene el vector con mayor similitud
+;;; coseno que se ha encontrado hasta el momento.
+;;;
+;;; INPUT: elem: par (<id-categoria> <similitud-coseno>), representado como una lista
+;;; 	   vectors: vector de vectores, representado como una lista de listas
+;;; OUTPUT: Par (<id-categoria> <similitud-coseno>) con mayor valor
+;;;			de similitud coseno.
+(defun vector-mas-similar-rec (elem vectors)
+  ;Obtiene max-sc, la máxima similitud coseno encontrada
+  ;hasta el momento (se usará como referencia); y 
+  ;similitud-cos, la <similitud-coseno> del primer
+  ;elemento del vector de vectores.
+  (let ((max-sc (second elem))
+		(similitud-cos (second (first vectors))))
+	;Si sólo queda un elemento del vector de vectores
+    ;por comparar, devolverá el par <id-categoria> <similitud-coseno>)
+    ;con mayor similitud coseno.
+	(if (null (rest vectors))
+		(if (> similitud-cos max-sc)
+				(first vectors)
+				elem)
+		;Sino, seguirá recorriendo el vector de vectores con elem
+		;o un vector de la lista de listas dependiendo de cúal
+		;tenga mayor similitud coseno.
+		(if (> similitud-cos max-sc)
+			(vector-mas-similar-rec (first vectors) (rest vectors))
+			(vector-mas-similar-rec elem (rest vectors))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; get-vector-mas-similar (cats text func)
+;;;
+;;; A partir de una lista de tipo:
+;;; ((<id-cat-1> <sc-1>) (<id-cat-2> <sc-2>) ... (<id-cat-n> <sc-n>))
+;;;
+;;; Obtiene el par (<id-cat> <similitud-coseno>) con 
+;;; la similitud coseno más alta.
 ;;;
 ;;; INPUT: cats: vector de vectores, representado como una lista de listas
-;;; 	   texts: vector de vectores, representado como una lista de listas
+;;; 	   text: vector que representa un texto, representado como una lista
 ;;; 	   func: función para evaluar la similitud coseno
-;;; OUTPUT: Pares identificador de categoría con resultado de similitud coseno, sin ordenar
-;;;
-(defun select-vector-class (cats texts func)
-  (first (sort (copy-list (crea-vectores-class cats texts func)) #'> :key #'second)))
+;;; OUTPUT: Par (<id-categoria> <similitud-coseno>) con mayor valor
+;;;			de similitud coseno.
+(defun vector-mas-similar (cats text func)
+  (let ((vectors (crea-vectores-similares cats text func)))
+	(vector-mas-similar-rec (first vectors) vectors)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; sc-classifier (cats texts func)
@@ -178,62 +226,45 @@
 ;;; OUTPUT: Pares identificador de categoría con resultado de similitud coseno
 ;;;
 (defun sc-classifier (cats texts func)
-  (if (or (null cats) (null texts))
-      nil
-    ; Comprueba la similitud coseno de cada vector categoria con
-    ; todos los elementos del vector de vectores texts
-    (list (select-vector-class (first cats) texts func) (select-vector-class (first (rest cats)) texts func))))
-
-
-
-
-
-
-
-
-;Devuelve una lista de identificadores de categoria
-;y el resultado de la similitud coseno entre el
-;vector texto y cada una de las categorías.
-(defun crea-vectores-similares (cats text func)
-  (if (null cats)
-	nil
-	(let ((id_categoria (first (first cats)))
-		  (categoria (rest (first cats)))
-		  (texto (rest text)))
-	  (cons (list id_categoria (funcall func categoria texto)) (crea-vectores-similares (rest cats) text func)))))
-
-;Filtra una lista de vectores a partir del parámetro max-sc, 
-;y devuelve el que mayor similitud tenga.
-;Actúa sobre vectores tipo ((<id-cat-1> <sc-1>) (<id-cat-2> <sc-2>) ... (<id-cat-n> <sc-n>))
-(defun vector-mas-similar (elem vectors)
-  (let ((max-sc (second elem))
-		(similitud-cos (second (first vectors))))
-	(if (null (rest vectors)) ;Ya no hay más para comparar
-		(if (> similitud-cos max-sc)
-				(first vectors)
-				elem)
-		(if (> similitud-cos max-sc)
-			(vector-mas-similar (first vectors) (rest vectors))
-			(vector-mas-similar elem (rest vectors))))))
-
-
-
-;Devuelve el vector con id de la categoria
-;que da la similitud coseno más alta
-;Actúa sobre vectores tipo ((<id-cat-1> <sc-1>) (<id-cat-2> <sc-2>) ... (<id-cat-n> <sc-n>))
-(defun get-vector-mas-similar (cats text func)
-  (let ((vectors (crea-vectores-similares cats text func)))
-	(vector-mas-similar (first vectors) vectors)))
-
-
-
-;MAIN FUNCTION
-(defun sc-classifier (cats texts func)
+  ;Si hemos llegado al final del vector de textos,
+  ;devolverá NIL (no hay más similitudes-coseno que evaluar).
   (if (null texts)
 	nil
-	(cons (get-vector-mas-similar cats (first texts) func) (sc-classifier cats (rest texts) func))))
-	
+	;Sino, crea una lista con los pares (<id-categoria> <similitud-coseno>)
+    ;con la similitud coseno más alta entre cada texto y las distintas categorías.
+	(cons (vector-mas-similar cats (first texts) func) (sc-classifier cats (rest texts) func))))
 
+
+;;;;;;;;;;;;;;;;;;;;
+;;; Apartado 1.4 ;;;
+;;;;;;;;;;;;;;;;;;;;
+
+;;
+;; EJEMPLOS:
+;;
+(sc-classifier '((1 43 23 12) (2 33 54 24)) '((1 3 22 134) (2 43 26 58)) #'sc-rec) 
+;; ((2 0.48981872) (1 0.81555086))
+(sc-classifier '((1 43 23 12) (2 33 54 24)) '((1 3 22 134) (2 43 26 58)) #'sc-mapcar) 
+;; ((2 0.48981872) (1 0.81555086))
+
+(sc-classifier '((1 30 11 90 4) (2 200 3 25 88)) '((1 120 10 80 3) (2 31 20 85 55)) #'sc-rec)
+;; ((2 0.82673454) (1 0.8757294))
+(sc-classifier '((1 30 11 90 4) (2 200 3 25 88)) '((1 120 10 80 3) (2 31 20 85 55)) #'sc-mapcar)
+;; ((2 0.82673454) (1 0.8757294))
+
+(sc-classifier '((1 14 60) (2 50 75) (3 2 1)) '((1 90 4) (2 5 6) (3 45 60)) #'sc-rec)
+;; ((3 0.91340166) (2 0.9943091) (2 0.9984604))
+(sc-classifier '((1 14 60) (2 50 75) (3 2 1)) '((1 90 4) (2 5 6) (3 45 60)) #'sc-mapcar)
+;; ((3 0.91340166) (2 0.9943091) (2 0.9984604))
+
+(time (sc-classifier '((1 43 23 12) (2 33 54 24)) '((1 3 22 134) (2 43 26 58)) #'sc-rec))
+(time (sc-classifier '((1 43 23 12) (2 33 54 24)) '((1 3 22 134) (2 43 26 58)) #'sc-mapcar))
+
+(time (sc-classifier '((1 30 11 90 4) (2 200 3 25 88)) '((1 120 10 80 3) (2 31 20 85 55)) #'sc-rec))
+(time (sc-classifier '((1 30 11 90 4) (2 200 3 25 88)) '((1 120 10 80 3) (2 31 20 85 55)) #'sc-mapcar))
+
+(time (sc-classifier '((1 14 60) (2 50 75) (3 2 1)) '((1 90 4) (2 5 6) (3 45 60)) #'sc-rec))
+(time (sc-classifier '((1 14 60) (2 50 75) (3 2 1)) '((1 90 4) (2 5 6) (3 45 60)) #'sc-mapcar))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -261,7 +292,7 @@
 (defun bisect (f a b tol)
   ;Genera x en en ámbito de la ejecución actual de la función de bisectriz
   (let ((x (/ (+ a b) 2)))
-    (if (> (* (funcall f a) (funcall f b)) 0)
+    (if (>= (* (funcall f a) (funcall f b)) 0)
         ;Si f(a) y f(b) son ambas positivas o negativas, devuelve NIL
         nil
       (if (< (- b a) tol)
@@ -272,6 +303,14 @@
             ;Si no, reposicionamos uno de los puntos como x y continuamos.
             (bisect f a x tol)
           (bisect f x b tol))))))
+
+;;
+;; EJEMPLOS:
+;;
+(bisect #'(lambda(x) (sin (* 6.26 x))) 0.1 0.7 0.001)
+(bisect #'(lambda(x) (sin (* 6.26 x))) 0.0 0.7 0.001)
+(bisect #'(lambda(x) (sin (* 6.28 x))) 1.1 1.5 0.001)
+(bisect #'(lambda(x) (sin (* 6.28 x))) 1.1 2.1 0.001)
 
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -291,7 +330,7 @@
 ;;;
 (defun allroot (f lst tol)
   (if (null (rest lst))
-      ;Si no quedan al menos dos números en la lista, la recursividad termina
+      ;Si no quedan al menos dos números en la lista, la recursividad termina.
       nil
     ;Comprueba si el signo de f(lst[i]) y f(lst[i+1]) es distinto. 
     ;Es decir, que  f(lst[i]) * f(lst[i+1]) < 0
@@ -302,6 +341,14 @@
       ;Si no se cumple la condición, continúa evaluando los
       ;elementos de la lista
       (allroot f (rest lst) tol))))
+
+;;
+;; EJEMPLOS:
+;;
+(allroot #'(lambda(x) (sin (* 6.28 x))) '(0.25 0.75 1.25 1.75 2.25) 0.0001)
+;; (0.50027466 1.0005188 1.5007629 2.001007)
+(allroot #'(lambda(x) (sin (* 6.28 x))) '(0.25 0.9 0.75 1.25 1.75 2.25) 0.0001)
+;; (0.50027466 1.0005188 1.5007629 2.001007)
 
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -346,6 +393,15 @@
   ; A.K.A.: #NoALosChurros
   (let ((interval-lst (make-interval-list a b (/ (+ (abs b) (abs a)) (expt 2 N)))))
 		(allroot f interval-lst tol)))
+
+;;
+;; EJEMPLOS:
+;;
+(allind #'(lambda(x) (sin (* 6.28 x))) 0.1 2.25 1 0.0001)
+;;  NIL
+(allind #'(lambda(x) (sin (* 6.28 x))) 0.1 2.25 2 0.0001)
+;; 0.50027084 1.0005027 1.5007347 2.0010324)
+
 	
 
 
