@@ -2424,3 +2424,48 @@
 ;;; Apartado 5.8 ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Loop safe Breadth-first-search in graphs
+;;;
+;;;
+;;; INPUT:	end: nodo destino de nuestra búsqueda
+;;;		queue: cola con los caminos de búsqueda
+;;;		net: lista representativa de nuestra red de nodos
+;;;		iter: número de iteraciones máximas que recorrerá el algoritmo
+;;; OUTPUT:	lista con el camino más corto al nodo destino
+(defun bfs-ls (end queue net iter)
+  (if (or (null queue) (equal 0 iter))
+      ;;Establecemos '() como caso base
+      '()
+    ;Cogemos el primer camino de la cola
+    (let* ((path (first queue)) 
+           ;Reconocemos el primer elemento del camino como el nodo
+           (node (first path))) 
+      (if (eql node end)
+          ;Si hemos contrado el nodo destino, devolvemos el la inversa del camino evaluado actual
+          (reverse path) 	
+        ;Si no, metemos todos los caminos a los que se puede llegar desde el nodo identificado en la cola
+        (bfs-ls end
+             (append (rest queue)
+                     (new-paths path node net))
+             net (- iter 1)))))) 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Shortest-path through Loop safe Breadth-first-search in graphs
+;;;
+;;; Encuentra el menor camino dado que introduce el primer nodo 
+;;; en el grafo y ejecuta una búsqueda de anchura hasta el nodo
+;;; destino, la cual, por defecto, encontrará el camino uno de
+;;; (o el) caminos con menor longitud.
+;;;
+;;;
+;;; INPUT:	start: nodo origen de nuestra búsqueda
+;;;		end: nodo destino de nuestra búsqueda
+;;;		net: lista representativa de nuestra red de nodos
+;;;		iter: número de iteraciones máximas que recorrerá el algoritmo
+;;; OUTPUT:	lista con el camino más corto al nodo destino o null si no hay camino
+(defun shortest-path-ls (start end net iter)
+  (bfs-ls end (list (list start)) net iter))
+
+(shortest-path-ls 'a 'c '((a b d) (b a d) (d b) (c h)) 50) ;; -> NIL
+
