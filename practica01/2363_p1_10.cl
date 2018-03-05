@@ -458,8 +458,6 @@
 (combine-lst-lst NIL '(a b c)) ;; --> NIL
 (combine-lst-lst '(a b c) '(1 2)) ;; --> ((A 1) (A 2) (B 1) (B 2) (C 1) (C 2))
 
-( '((+)(-)) '((1)(2)(3)))
-
 ;;;;;;;;;;;;;;;;;;;;
 ;;; Apartado 3.3 ;;;
 ;;;;;;;;;;;;;;;;;;;;
@@ -476,15 +474,22 @@
 (defun combine-list-of-lsts (lstolsts)
   (if (null (rest lstolsts))
       (mapcar #'list (first lstolsts))
-    (reduce #'combine-lst-lst (cons (first lstolsts) (combine-list-of-lsts (rest lstolsts))))))
+    (combine-lol-rec (mapcar #'list (first lstolsts))
+                     (combine-list-of-lsts (rest lstolsts)))))
 
-(defun combine-lol-inner (lst lstolsts)
+(defun combine-lol-rec (lst1 lst2)
+  (if (or (null lst1) (null lst2))
+      nil
+    (append (combine-lol-rec-inner (first lst1) lst2)
+          (combine-lol-rec (rest lst1) lst2))))
+
+(defun combine-lol-rec-inner(elt lst)
   (if (null lst)
-      null
-    
-  
-            
-            
+      nil
+    (cons (append elt (first lst)) (combine-lol-rec-inner elt (rest lst)))))
+
+
+
 (combine-list-of-lsts '(() (+ -) (1 2 3 4))) ;; --> NIL
 (combine-list-of-lsts '((a b c) () (1 2 3 4))) ;; --> NIL
 (combine-list-of-lsts '((a b c) (1 2 3 4) ())) ;; --> NIL
