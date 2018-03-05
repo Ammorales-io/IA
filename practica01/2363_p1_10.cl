@@ -2248,8 +2248,8 @@
   (if (null cls)
       nil
     (if (literal-p (first cls))
-        (append (invert (first cls)) (apply-negation (rest cls)))
-      (append (apply-negation (first cls)) (apply-negation (rest cls))))))
+        (cons (invert (first cls)) (apply-negation (rest cls)))
+      (cons (apply-negation (first cls)) (apply-negation (rest cls))))))
 
 (defun invert (lit)
   (if (positive-literal-p lit)
