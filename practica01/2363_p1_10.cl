@@ -101,18 +101,18 @@
 (defun crea-vectores-conf (cat vs conf)
   (if (null vs)
       nil
-	;Obtiene la similitud coseno entre 
-	;el vector categoría y el primer vector de vs.
+    ;Obtiene la similitud coseno entre 
+    ;el vector categoría y el primer vector de vs.
     (let ((similitud-cos (sc-rec cat (first vs))))
-		;Comprueba si es distinta de NIL y es mayor
-		;que el parámetro conf.
-		(if (and (not (null similitud-cos))
-				 (> similitud-cos conf))
-			;Si cumple las condiciones, crea una lista con el vector
-			;y el resto de los elementos de vs.
-			(append (list (first vs)) (crea-vectores-conf cat (rest vs) conf))
-			;Sino, sigue evaluando vs.
-			(crea-vectores-conf cat (rest vs) conf)))))
+      ;Comprueba si es distinta de NIL y es mayor
+      ;que el parámetro conf.
+      (if (and (not (null similitud-cos))
+               (> similitud-cos conf))
+          ;Si cumple las condiciones, crea una lista con el vector
+          ;y el resto de los elementos de vs.
+          (append (list (first vs)) (crea-vectores-conf cat (rest vs) conf))
+        ;Sino, sigue evaluando vs.
+        (crea-vectores-conf cat (rest vs) conf)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; sc-conf (cat vs conf)
@@ -151,16 +151,16 @@
   ;Si hemos llegado al final del vector de categorías,
   ;no hay más cálculos que hacer.
   (if (null cats)
-	nil
-	;Sino, obtiene el id de la categoría, el
-	;vector categoría actual y el vector texto actual.
-	(let ((id_categoria (first (first cats)))
-		  (categoria (rest (first cats)))
-		  (texto (rest text)))
-	  ;Construye una lista con pares de tipo 
-	  ;(<id-categoria> <similitud-coseno>).
-	  (cons (list id_categoria (funcall func categoria texto)) 
-			(crea-vectores-similares (rest cats) text func)))))
+      nil
+    ;Sino, obtiene el id de la categoría, el
+    ;vector categoría actual y el vector texto actual.
+    (let ((id_categoria (first (first cats)))
+          (categoria (rest (first cats)))
+          (texto (rest text)))
+      ;Construye una lista con pares de tipo 
+      ;(<id-categoria> <similitud-coseno>).
+      (cons (list id_categoria (funcall func categoria texto))
+            (crea-vectores-similares (rest cats) text func)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; vector-mas-similar-rec (elem vectors)
@@ -182,20 +182,20 @@
   ;similitud-cos, la <similitud-coseno> del primer
   ;elemento del vector de vectores.
   (let ((max-sc (second elem))
-		(similitud-cos (second (first vectors))))
-	;Si sólo queda un elemento del vector de vectores
+        (similitud-cos (second (first vectors))))
+    ;Si sólo queda un elemento del vector de vectores
     ;por comparar, devolverá el par <id-categoria> <similitud-coseno>)
     ;con mayor similitud coseno.
-	(if (null (rest vectors))
-		(if (> similitud-cos max-sc)
-				(first vectors)
-				elem)
-		;Sino, seguirá recorriendo el vector de vectores con elem
-		;o un vector de la lista de listas dependiendo de cúal
-		;tenga mayor similitud coseno.
-		(if (> similitud-cos max-sc)
-			(vector-mas-similar-rec (first vectors) (rest vectors))
-			(vector-mas-similar-rec elem (rest vectors))))))
+    (if (null (rest vectors))
+        (if (> similitud-cos max-sc)
+            (first vectors)
+          elem)
+      ;Sino, seguirá recorriendo el vector de vectores con elem
+      ;o un vector de la lista de listas dependiendo de cúal
+      ;tenga mayor similitud coseno.
+      (if (> similitud-cos max-sc)
+          (vector-mas-similar-rec (first vectors) (rest vectors))
+        (vector-mas-similar-rec elem (rest vectors))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; get-vector-mas-similar (cats text func)
@@ -213,7 +213,7 @@
 ;;;			de similitud coseno.
 (defun vector-mas-similar (cats text func)
   (let ((vectors (crea-vectores-similares cats text func)))
-	(vector-mas-similar-rec (first vectors) vectors)))
+    (vector-mas-similar-rec (first vectors) vectors)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; sc-classifier (cats texts func)
@@ -229,10 +229,10 @@
   ;Si hemos llegado al final del vector de textos,
   ;devolverá NIL (no hay más similitudes-coseno que evaluar).
   (if (null texts)
-	nil
-	;Sino, crea una lista con los pares (<id-categoria> <similitud-coseno>)
+      nil
+    ;Sino, crea una lista con los pares (<id-categoria> <similitud-coseno>)
     ;con la similitud coseno más alta entre cada texto y las distintas categorías.
-	(cons (vector-mas-similar cats (first texts) func) (sc-classifier cats (rest texts) func))))
+    (cons (vector-mas-similar cats (first texts) func) (sc-classifier cats (rest texts) func))))
 
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -266,6 +266,8 @@
 (time (sc-classifier '((1 14 60) (2 50 75) (3 2 1)) '((1 90 4) (2 5 6) (3 45 60)) #'sc-rec))
 (time (sc-classifier '((1 14 60) (2 50 75) (3 2 1)) '((1 90 4) (2 5 6) (3 45 60)) #'sc-mapcar))
 
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;  EJERCICIO 2  ;;;;;
@@ -298,7 +300,7 @@
       (if (< (- b a) tol)
           ;Si b - a < tol, la función devuelve x como resultado
           x
-        ; Si f(a) * f(x) < 0, la función busca en [a, x]
+        ;Si f(a) * f(x) < 0, la función busca en [a, x]
         (if (< (* (funcall f a) (funcall f x)) 0)
             ;Si no, reposicionamos uno de los puntos como x y continuamos.
             (bisect f a x tol)
@@ -339,7 +341,7 @@
         ;la lista a la llamada recursiva, quitando el primer elemento 
         (cons (bisect f (first lst) (second lst) tol) (allroot f (rest lst) tol))
       ;Si no se cumple la condición, continúa evaluando los
-      ;elementos de la lista
+      ;elementos de la lista.
       (allroot f (rest lst) tol))))
 
 ;;
@@ -392,7 +394,7 @@
   ; hemos optado por crear una variable local para aumentar la claridad del código.
   ; A.K.A.: #NoALosChurros
   (let ((interval-lst (make-interval-list a b (/ (+ (abs b) (abs a)) (expt 2 N)))))
-		(allroot f interval-lst tol)))
+    (allroot f interval-lst tol)))
 
 ;;
 ;; EJEMPLOS:
@@ -401,7 +403,6 @@
 ;;  NIL
 (allind #'(lambda(x) (sin (* 6.28 x))) 0.1 2.25 2 0.0001)
 ;; 0.50027084 1.0005027 1.5007347 2.0010324)
-
 	
 
 
