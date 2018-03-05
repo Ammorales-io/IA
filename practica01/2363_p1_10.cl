@@ -458,25 +458,33 @@
 (combine-lst-lst NIL '(a b c)) ;; --> NIL
 (combine-lst-lst '(a b c) '(1 2)) ;; --> ((A 1) (A 2) (B 1) (B 2) (C 1) (C 2))
 
+( '((+)(-)) '((1)(2)(3)))
+
 ;;;;;;;;;;;;;;;;;;;;
 ;;; Apartado 3.3 ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; combine-list-of-lst (lstolsts) 
-;;;	!Warning: Incompleta, el resultado conseguido no es correcto aun
 ;;;
 ;;; Genera el producto cartesiano de los elementos de los sublistados
 ;;; facilitados mediante un listado.
 ;;;
-;;; INPUT:	lstolsts: listado con los sublistados
+;;; INPUT:  lstolsts: listado con los sublistados
 ;;; OUTPUT: Listado con el producto cartesiano de los elementos de los sublistados
 ;;;
 (defun combine-list-of-lsts (lstolsts)
-  (if (null lstolsts)
-      nil
-    (mapcar #'combine-elt-lst (first lstolsts) (combine-list-of-lsts (rest lstolsts)))))
+  (if (null (rest lstolsts))
+      (mapcar #'list (first lstolsts))
+    (reduce #'combine-lst-lst (cons (first lstolsts) (combine-list-of-lsts (rest lstolsts))))))
 
+(defun combine-lol-inner (lst lstolsts)
+  (if (null lst)
+      null
+    
+  
+            
+            
 (combine-list-of-lsts '(() (+ -) (1 2 3 4))) ;; --> NIL
 (combine-list-of-lsts '((a b c) () (1 2 3 4))) ;; --> NIL
 (combine-list-of-lsts '((a b c) (1 2 3 4) ())) ;; --> NIL
@@ -2263,17 +2271,17 @@
 ;;
 (logical-consequence-RES-SAT-p NIL 'a) ;;; NIL
 (logical-consequence-RES-SAT-p NIL NIL) ;;; NIL
-(logical-consequence-RES-SAT-p '(q ^ (~ q)) 'a) ;;; T 
-(logical-consequence-RES-SAT-p '(q ^ (~ q)) '(~ a)) ;;; T 
+(logical-consequence-RES-SAT-p '(q ^ (~ q)) 'a) ;;; T !!
+(logical-consequence-RES-SAT-p '(q ^ (~ q)) '(~ a)) ;;; T !! 
 
 (logical-consequence-RES-SAT-p '((p => (~ p)) ^ p) 'q)
-;; T
+;; T !!
 
 (logical-consequence-RES-SAT-p '((p => (~ p)) ^ p) '(~ q))
-;; T
+;; T !!
 
 (logical-consequence-RES-SAT-p '((p => q) ^ p) 'q)
-;; T!!
+;; T
 
 (logical-consequence-RES-SAT-p '((p => q) ^ p) '(~q))
 ;; NIL
@@ -2296,7 +2304,7 @@
 (logical-consequence-RES-SAT-p 
  '(((~ p) => q) ^ (p => ((~ a) ^ b)) ^ ( (~ p) => (r  ^ (~ q)))) 
  '(~ a))
-;; T!!
+;; T
 
 (logical-consequence-RES-SAT-p 
  '(((~ p) => q) ^ (p <=> ((~ a) ^ b)) ^ ( (~ p) => (r  ^ (~ q)))) 
