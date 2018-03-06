@@ -463,6 +463,38 @@
 ;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; combine-list-of-lists-rec-inner(elt lst)
+;;;
+;;; Une todas las sublistas de lst con el elemento lst.
+;;;
+;;; INPUT:  	elt: único elemento encapsulado en una lista
+;;;		lst: lista con sublistas
+;;; OUTPUT: Listado con el producto cartesiano de los elementos de los sublistados
+;;;
+(defun prod-cartesiano-inner(elt lst)
+  (if (null lst)
+      nil
+    (cons (append elt (first lst)) (prod-cartesiano-inner elt (rest lst)))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; combine-list-of-lists-rec (lst1 lst2)
+;;;
+;;; Une cada elemento de lst1 a todos los elementos de lst2, generando,
+;;; efectivamente, el producto cartesiano de ambas.
+;;;
+;;; INPUT:  	lst1: lista con sublistas sobre la que iterar elemento a elemento
+;;; 		lst2: lista con sublistas sobre la que iterar integramente
+;;; OUTPUT: Listado con el producto cartesiano de los elementos de los sublistados
+;;;
+(defun prod-cartesiano (lst1 lst2)
+  (if (or (null lst1) (null lst2))
+      nil
+    (append (prod-cartesiano-inner (first lst1) lst2)
+          (prod-cartesiano (rest lst1) lst2))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; combine-list-of-lst (lstolsts) 
 ;;;
 ;;; Genera el producto cartesiano de los elementos de los sublistados
@@ -473,21 +505,12 @@
 ;;;
 (defun combine-list-of-lsts (lstolsts)
   (if (null (rest lstolsts))
+      ;Dejamos como caso base la generación de sublistas de los elementos de una lista dada
       (mapcar #'list (first lstolsts))
-    (combine-lol-rec (mapcar #'list (first lstolsts))
+    ;Como iteración, tenemos dos funciones recursivas, a las que introduciremos cada par de listas
+    ;cuyos elementos ya han sido divididos en sublistas
+    (prod-cartesiano (mapcar #'list (first lstolsts))
                      (combine-list-of-lsts (rest lstolsts)))))
-
-(defun combine-lol-rec (lst1 lst2)
-  (if (or (null lst1) (null lst2))
-      nil
-    (append (combine-lol-rec-inner (first lst1) lst2)
-          (combine-lol-rec (rest lst1) lst2))))
-
-(defun combine-lol-rec-inner(elt lst)
-  (if (null lst)
-      nil
-    (cons (append elt (first lst)) (combine-lol-rec-inner elt (rest lst)))))
-
 
 
 (combine-list-of-lsts '(() (+ -) (1 2 3 4))) ;; --> NIL
@@ -1530,21 +1553,31 @@
 (defun eliminate-subsumed-clauses (cnf) 
   (eliminate-subsumed-clauses-rec cnf cnf))
 
+;; Función que permite a eliminate-subsumed-clauses aplicar
+;; recursividad de forma transparente
 (defun eliminate-subsumed-clauses-rec (cnf cnf-original)
   (if (null cnf)
+      ;; Usamos como caso original la cnf original, dado que nil
+      ;; no nos permitiría usar intersection para reconstruir
+      ;; la lista resultante
       cnf-original
     (if (null (first-needs-removal? (first cnf) (rest cnf)))
+        ;; Si el primer elemento no necesita ser quitado, se une a
+        ;; la lista resultante de la limpieza de clausulas subsumidas
         (append 
          (list (first cnf)) 
          (intersection 
           (remove-subsumed-clauses (first cnf) (rest cnf)) 
           (eliminate-subsumed-clauses-rec (rest cnf) cnf-original) 
           :test #'equal))
+      ;; Si hay que eliminarla, símplemente no se añade al resultado
       (intersection 
        (remove-subsumed-clauses (first cnf) (rest cnf)) 
        (eliminate-subsumed-clauses-rec (rest cnf) cnf-original) 
        :test #'equal))))
 
+;; Función que discierne si first-fbf es subsumidas de alguna de
+;; las clausulas contenidas en rest-cnf
 (defun first-needs-removal? (first-fbf rest-cnf)
   (if (null (first rest-cnf))
       nil
@@ -1552,6 +1585,8 @@
         (or nil (first-needs-removal? first-fbf (rest rest-cnf)))
       T)))
 
+;; Función que elimina todas las clausulas de rest-cnf que son
+;; una subsumiciones de first-fbf
 (defun remove-subsumed-clauses (first-fbf rest-cnf)
   (if (null (first rest-cnf))
       '()
@@ -2162,41 +2197,54 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun  RES-SAT-p (cnf)
   (if (null cnf)
-      ; Registramos el caso de la tautología. 
+      ;Registramos el caso de la tautología. 
       T
     (if (null (check-4-empty-clause cnf))
+        ;Si no existen clausulas vacías, pasamos a la parte
+        ;recursiva de la función
         (RES-SAT-p-rec cnf (make-literal-list cnf))
       nil)))
 
-
-(defun RES-SAT-p-rec(cnf list)
-  (if (null list)
+;Implementación recursiva de la función, resuelve la cnf mediante cada uno de
+;los literales que se encuentran en la misma, contenidos en lst
+(defun RES-SAT-p-rec(cnf lst)
+  (if (null lst)
+      ;Si terminamos la lista...
       (if (null cnf)
+          ;...Y cnf es null, devolvemos T, es SAT
           T
+        ;...Y cnf no es null, devolvemos nil, es UNSAT
         nil)
+    ;Resuelve frente al siguiente atomo
     (RES-SAT-p-rec 
-     (simplify-cnf (build-RES (first list) cnf))
-     (rest list))))
+     (simplify-cnf (build-RES (first lst) cnf))
+     (rest lst))))
   
-
+;Genera la lista de literales de una cnf, todos en
+;estado positivo
 (defun make-literal-list (cnf)
   (eliminate-repeated-literals
           (happiness
            (reduce #'union cnf))))
 
-(defun happiness (list)
-  (if (null list)
+;Función que hace todos los átomos de una lista de ellos
+;positivos
+(defun happiness (lst)
+  (if (null lst)
       nil
     (cons 
-     (make-positive (first list))
-     (happiness (rest list)))))
-                    
-  
+     (make-positive (first lst))
+     (happiness (rest lst)))))
+
+;Función que busca, que devuelve la versión positiva
+;del átomo dado atom  
 (defun make-positive (atom)
   (if (positive-literal-p atom)
       atom
     (second atom)))
 
+;Función que busca, en cnf, clausulas vacías, devolviendo
+;T si la encuentra, nil en caso contrario.
 (defun check-4-empty-clause (cnf)
   (if (null cnf)
       nil
@@ -2467,5 +2515,5 @@
 (defun shortest-path-ls (start end net iter)
   (bfs-ls end (list (list start)) net iter))
 
-(shortest-path-ls 'a 'c '((a b d) (b a d) (d b) (c h)) 50) ;; -> NIL
+(shortest-path-ls 'a 'c '((a b d) (b a d) (d b) (c a)) 50) ;; -> NIL
 
