@@ -2052,6 +2052,7 @@
             (list NIL)
           (union resolved-K1 resolved-K2))))))
 
+(resolve-on 'A '((~A)) '(nil))
 ;;
 ;;  EJEMPLOS:
 ;;
@@ -2158,10 +2159,10 @@
     ;positivas, negativas y neutras.
     (let ((positive-clauses (extract-positive-clauses lambda cnf))
           (negative-clauses (extract-negative-clauses lambda cnf))
-          (neutral-clauses (extract-neutral-clauses lambda cnf)))
+          (neutral-clauses (extract-neutral-clauses lambda cnf))) 
       ;Une las cláusulas neutras con el resultado de resolver entre 
       ;el conjunto de cláusulas positivas y el conjunto de cláusulas
-      ;negativas sobre lambda.
+      ;negativas sobre lambda.             
       (eliminate-repeated-clauses
        (union neutral-clauses
               (get-all-resolved-clauses lambda positive-clauses negative-clauses))))))
@@ -2199,11 +2200,9 @@
   (if (null cnf)
       ;Registramos el caso de la tautología. 
       T
-    (if (null (check-4-empty-clause cnf))
-        ;Si no existen clausulas vacías, pasamos a la parte
-        ;recursiva de la función
-        (RES-SAT-p-rec cnf (make-literal-list cnf))
-      nil)))
+    ;Pasamos a la parte recursiva de la función
+    (RES-SAT-p-rec cnf (make-literal-list cnf))))
+
 
 ;Implementación recursiva de la función, resuelve la cnf mediante cada uno de
 ;los literales que se encuentran en la misma, contenidos en lst
@@ -2215,10 +2214,14 @@
           T
         ;...Y cnf no es null, devolvemos nil, es UNSAT
         nil)
-    ;Resuelve frente al siguiente atomo
-    (RES-SAT-p-rec 
-     (simplify-cnf (build-RES (first lst) cnf))
-     (rest lst))))
+    ;Comprueba que no haya clausulas vacias
+    (if (null (check-4-empty-clause cnf))
+        ;Resuelve frente al siguiente literal
+        (RES-SAT-p-rec 
+         (simplify-cnf (build-RES (first lst) cnf))
+         (rest lst))
+      ;Si hay clausulas vacias, devuelve directamente nil
+      nil)))
   
 ;Genera la lista de literales de una cnf, todos en
 ;estado positivo
@@ -2287,7 +2290,7 @@
 ;; RECIBE   : wff - FBF en formato infijo 
 ;;            w   - FBF en formato infijo 
 ;;                               
-;; EVALUA A : T   si w es consecuencia logica de wff
+;; EVALUA A : T si w es consecuencia logica de wff
 ;;            NIL en caso de que no sea consecuencia logica.  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun logical-consequence-RES-SAT-p (wff w)
@@ -2318,6 +2321,16 @@
     (second lit)))
 
 (reduce-scope-of-negation-cnf (cons +not+ (wff-infix-to-cnf 'a)))
+
+(RES-SAT-p
+   (union
+    (wff-infix-to-cnf '(q ^ (~ q)))
+    (reduce-scope-of-negation-cnf (cons +not+ (wff-infix-to-cnf 'a)))))
+
+(RES-SAT-p
+   (union
+    (wff-infix-to-cnf '(((~ p) => q) ^ (p => (a v (~ b))) ^ (p => ((~ a) ^ b)) ^ ( (~ p) => (r  ^ (~ q)))))
+    (reduce-scope-of-negation-cnf (cons +not+ (wff-infix-to-cnf 'a)))))
 
 ;;
 ;;  EJEMPLOS:
