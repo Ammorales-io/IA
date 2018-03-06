@@ -2257,6 +2257,7 @@
        (check-4-empty-clause 
         (rest cnf))))))
 
+;; Para borrar antes de entregar
 (reduce-scope-of-negation (cons +not+ (wff-infix-to-cnf '(~ a))))
 (RES-SAT-p '((A) (P Q) ((~ P) (~ A)) ((~ P) B) (P R) (P (~ Q)))) 
     
@@ -2294,20 +2295,30 @@
 ;;            NIL en caso de que no sea consecuencia logica.  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun logical-consequence-RES-SAT-p (wff w)
-  (if (null (RES-SAT-p
-   (union
-    (wff-infix-to-cnf wff)
-    (reduce-scope-of-negation-cnf (cons +not+ (wff-infix-to-cnf w))))))
+  (if (null
+       ;Comprobamos si es satisfactible o no...
+       (RES-SAT-p
+        ;La union...
+        (union
+         ;De la forma FNC de wff
+         (wff-infix-to-cnf wff)
+         ;...Y la forma FNC de ~w
+         (reduce-scope-of-negation-cnf 
+          (cons +not+ (wff-infix-to-cnf w))))))
+      ;Si no lo es, w es consecuencia lógica de wff, devolvemos T
       T
+    ;Si lo es, w NO es consecuencia lógica de wff, devolvemos nil
     nil))
 
+;Función que reduce el ámbito de la negación en una cnf dada
 (defun reduce-scope-of-negation-cnf (cnf)
   (if (null cnf)
       nil
     (if (equal +not+ (first cnf))
         (apply-negation (rest cnf))
       cnf)))
-  
+
+;Función que aplica negación sobre una clausula y todas sus subclausulas
 (defun apply-negation(cls)
   (if (null cls)
       nil
@@ -2315,11 +2326,13 @@
         (cons (invert (first cls)) (apply-negation (rest cls)))
       (cons (apply-negation (first cls)) (apply-negation (rest cls))))))
 
+;Función que invierte un literal
 (defun invert (lit)
   (if (positive-literal-p lit)
       (list +not+ lit)
     (second lit)))
 
+;; Para borrar antes de entregar
 (reduce-scope-of-negation-cnf (cons +not+ (wff-infix-to-cnf 'a)))
 
 (RES-SAT-p
