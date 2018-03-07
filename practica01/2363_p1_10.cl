@@ -2050,7 +2050,7 @@
         ;Sino, devolverá la unión entre las cláusulas resueltas.
         (if (and (null resolved-K1) (null resolved-K2))
             (list NIL)
-          (union resolved-K1 resolved-K2))))))
+          (list (union resolved-K1 resolved-K2)))))))
 
 (resolve-on 'A '((~A)) '(nil))
 ;;
@@ -2102,15 +2102,19 @@
   (if (null clause-set)
       nil
     ;Resuelve K y la primera cláusula del conjunto sobre lambda.
-    (let ((resolved-clause (resolve-on lambda K (first clause-set))))
+	;Como el resultado devuelto por resolve-on es una lista con la
+	;cláusula resuelta, la variable extraerá dicha cláusula.
+    (let ((resolved-clause (first (resolve-on lambda K (first clause-set)))))
       ;Si la cláusula resuelta tiene el valor '(NIL), 
       ;no hay más cláusulas que resolver.
-      (if (equal resolved-clause '(NIL))
-          resolved-clause
+	  ;---------------------------------
+      ;(if (equal resolved-clause '(NIL))
+          ;resolved-clause
+      ;---------------------------------
         ;Sino, construye una lista de cláusulas resueltas, sin 
         ;literales repetidos.
         (cons (eliminate-repeated-literals resolved-clause)
-              (get-list-of-resolved-clauses lambda K (rest clause-set)))))))
+              (get-list-of-resolved-clauses lambda K (rest clause-set))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; get-all-resolved-clauses (lambda positive-clauses negative-clauses)
@@ -2227,17 +2231,16 @@
 ;estado positivo
 (defun make-literal-list (cnf)
   (eliminate-repeated-literals
-          (happiness
-           (reduce #'union cnf))))
+          (make-all-positive (reduce #'union cnf))))
 
 ;Función que hace todos los átomos de una lista de ellos
 ;positivos
-(defun happiness (lst)
+(defun make-all-positive (lst)
   (if (null lst)
       nil
     (cons 
      (make-positive (first lst))
-     (happiness (rest lst)))))
+     (make-all-positive (rest lst)))))
 
 ;Función que busca, que devuelve la versión positiva
 ;del átomo dado atom  
@@ -2254,8 +2257,7 @@
     (if (null (first cnf))
         T
       (or 
-       (check-4-empty-clause 
-        (rest cnf))))))
+       (check-4-empty-clause (rest cnf))))))
 
 ;; Para borrar antes de entregar
 (reduce-scope-of-negation (cons +not+ (wff-infix-to-cnf '(~ a))))
@@ -2319,7 +2321,7 @@
       cnf)))
 
 ;Función que aplica negación sobre una clausula y todas sus subclausulas
-(defun apply-negation(cls)
+(defun apply-negation (cls)
   (if (null cls)
       nil
     (if (literal-p (first cls))
