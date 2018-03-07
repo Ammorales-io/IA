@@ -2219,13 +2219,14 @@
         ;...Y cnf no es null, devolvemos nil, es UNSAT
         nil)
     ;Comprueba que no haya clausulas vacias
-    (if (null (check-4-empty-clause cnf))
-        ;Resuelve frente al siguiente literal
-        (RES-SAT-p-rec 
-         (simplify-cnf (build-RES (first lst) cnf))
-         (rest lst))
-      ;Si hay clausulas vacias, devuelve directamente nil
-      nil)))
+    (if (or (check-4-empty-clause cnf)
+            (check-4-empty-clause (build-RES (first lst) cnf)))
+        ;Si hay clausulas vacias, devuelve directamente nil
+        nil
+      ;Si no, resuelve frente al siguiente literal
+      (RES-SAT-p-rec 
+       (simplify-cnf (build-RES (first lst) cnf))
+       (rest lst)))))
   
 ;Genera la lista de literales de una cnf, todos en
 ;estado positivo
@@ -2305,47 +2306,12 @@
          ;De la forma FNC de wff
          (wff-infix-to-cnf wff)
          ;...Y la forma FNC de ~w
-         (reduce-scope-of-negation-cnf 
-          (cons +not+ (wff-infix-to-cnf w))))))
+         (wff-infix-to-cnf 
+          (list +not+ w)))))
       ;Si no lo es, w es consecuencia lógica de wff, devolvemos T
       T
     ;Si lo es, w NO es consecuencia lógica de wff, devolvemos nil
     nil))
-
-;Función que reduce el ámbito de la negación en una cnf dada
-(defun reduce-scope-of-negation-cnf (cnf)
-  (if (null cnf)
-      nil
-    (if (equal +not+ (first cnf))
-        (apply-negation (rest cnf))
-      cnf)))
-
-;Función que aplica negación sobre una clausula y todas sus subclausulas
-(defun apply-negation (cls)
-  (if (null cls)
-      nil
-    (if (literal-p (first cls))
-        (cons (invert (first cls)) (apply-negation (rest cls)))
-      (cons (apply-negation (first cls)) (apply-negation (rest cls))))))
-
-;Función que invierte un literal
-(defun invert (lit)
-  (if (positive-literal-p lit)
-      (list +not+ lit)
-    (second lit)))
-
-;; Para borrar antes de entregar
-(reduce-scope-of-negation-cnf (cons +not+ (wff-infix-to-cnf 'a)))
-
-(RES-SAT-p
-   (union
-    (wff-infix-to-cnf '(q ^ (~ q)))
-    (reduce-scope-of-negation-cnf (cons +not+ (wff-infix-to-cnf 'a)))))
-
-(RES-SAT-p
-   (union
-    (wff-infix-to-cnf '(((~ p) => q) ^ (p => (a v (~ b))) ^ (p => ((~ a) ^ b)) ^ ( (~ p) => (r  ^ (~ q)))))
-    (reduce-scope-of-negation-cnf (cons +not+ (wff-infix-to-cnf 'a)))))
 
 ;;
 ;;  EJEMPLOS:
