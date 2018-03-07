@@ -1063,7 +1063,7 @@
    (t connector)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; EJERCICIO 4.2.3
+;; EJERCICIO 4.2.4
 ;; Dada una FBF, que no contiene los conectores <=>, => 
 ;; evalua a una FNC equivalente en la que la negacion  
 ;; aparece unicamente en literales negativos
@@ -2219,14 +2219,15 @@
         ;...Y cnf no es null, devolvemos nil, es UNSAT
         nil)
     ;Comprueba que no haya clausulas vacias
-    (if (or (check-4-empty-clause cnf)
-            (check-4-empty-clause (build-RES (first lst) cnf)))
-        ;Si hay clausulas vacias, devuelve directamente nil
-        nil
-      ;Si no, resuelve frente al siguiente literal
-      (RES-SAT-p-rec 
-       (simplify-cnf (build-RES (first lst) cnf))
-       (rest lst)))))
+    (let ((res (build-RES (first lst) cnf)))
+        (if (or (check-4-empty-clause cnf)
+                (check-4-empty-clause res))
+            ;Si hay clausulas vacias, devuelve directamente nil
+            nil
+          ;Si no, resuelve frente al siguiente literal
+          (RES-SAT-p-rec 
+           (simplify-cnf (build-RES (first lst) cnf))
+           (rest lst))))))
   
 ;Genera la lista de literales de una cnf, todos en
 ;estado positivo
@@ -2259,11 +2260,7 @@
         T
       (or 
        (check-4-empty-clause (rest cnf))))))
-
-;; Para borrar antes de entregar
-(reduce-scope-of-negation (cons +not+ (wff-infix-to-cnf '(~ a))))
-(RES-SAT-p '((A) (P Q) ((~ P) (~ A)) ((~ P) B) (P R) (P (~ Q)))) 
-    
+   
 ;;
 ;;  EJEMPLOS:
 ;;
@@ -2318,14 +2315,14 @@
 ;;
 (logical-consequence-RES-SAT-p NIL 'a) ;;; NIL
 (logical-consequence-RES-SAT-p NIL NIL) ;;; NIL
-(logical-consequence-RES-SAT-p '(q ^ (~ q)) 'a) ;;; T !!
-(logical-consequence-RES-SAT-p '(q ^ (~ q)) '(~ a)) ;;; T !! 
+(logical-consequence-RES-SAT-p '(q ^ (~ q)) 'a) ;;; T 
+(logical-consequence-RES-SAT-p '(q ^ (~ q)) '(~ a)) ;;; T 
 
 (logical-consequence-RES-SAT-p '((p => (~ p)) ^ p) 'q)
-;; T !!
+;; T 
 
 (logical-consequence-RES-SAT-p '((p => (~ p)) ^ p) '(~ q))
-;; T !!
+;; T
 
 (logical-consequence-RES-SAT-p '((p => q) ^ p) 'q)
 ;; T
@@ -2397,7 +2394,8 @@
 ;;; OUTPUT:	lista con el camino más corto al nodo destino
 (defun bfs (end queue net)
   (if (null queue)
-      ;;Establecemos '() como caso base
+      ;;Establecemos '() como 'caso base' que, en realidad, sirve para reportar
+      ;;que la queue se ha quedado vacía y no hemos encontrado el camino
       '()
     ;Cogemos el primer camino de la cola
     (let* ((path (first queue)) 
@@ -2467,17 +2465,32 @@
 ;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; new-paths loop safe
+;;
+;; INPUT: 	path: camino actual
+;;		node: nodo actual
+;;		net: lista representativa de nuestra red de nodos
+;; OUTPUT:	lista de nodos a los que se puede llegar desde el nodo actual
+(defun new-paths-ls (path node net)
+  (mapcar #'(lambda(n)
+              (if (null (member n path))
+                  (cons n path)
+                nil))
+    (rest (assoc node net)))) 	;; Genera caminos nuevos juntando el camino previo a todos aquellos
+				;; con todos aquellos nodos accesibles desde el nodo actual
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Loop safe Breadth-first-search in graphs
 ;;;
 ;;;
 ;;; INPUT:	end: nodo destino de nuestra búsqueda
 ;;;		queue: cola con los caminos de búsqueda
 ;;;		net: lista representativa de nuestra red de nodos
-;;;		iter: número de iteraciones máximas que recorrerá el algoritmo
 ;;; OUTPUT:	lista con el camino más corto al nodo destino
-(defun bfs-ls (end queue net iter)
-  (if (or (null queue) (equal 0 iter))
-      ;;Establecemos '() como caso base
+(defun bfs-ls (end queue net)
+  (if (or (null queue))
+      ;;Establecemos '() como 'caso base' que, en realidad, sirve para reportar
+      ;;que la queue se ha quedado vacía y no hemos encontrado el camino
       '()
     ;Cogemos el primer camino de la cola
     (let* ((path (first queue)) 
@@ -2489,8 +2502,8 @@
         ;Si no, metemos todos los caminos a los que se puede llegar desde el nodo identificado en la cola
         (bfs-ls end
              (append (rest queue)
-                     (new-paths path node net))
-             net (- iter 1)))))) 
+                     (new-paths-ls path node net))
+             net)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Shortest-path through Loop safe Breadth-first-search in graphs
@@ -2504,10 +2517,10 @@
 ;;; INPUT:	start: nodo origen de nuestra búsqueda
 ;;;		end: nodo destino de nuestra búsqueda
 ;;;		net: lista representativa de nuestra red de nodos
-;;;		iter: número de iteraciones máximas que recorrerá el algoritmo
 ;;; OUTPUT:	lista con el camino más corto al nodo destino o null si no hay camino
-(defun shortest-path-ls (start end net iter)
-  (bfs-ls end (list (list start)) net iter))
+(defun shortest-path-ls (start end net)
+  (bfs-ls end (list (list start)) net))
 
-(shortest-path-ls 'a 'c '((a b d) (b a d) (d b) (c a)) 50) ;; -> NIL
+(shortest-path-ls 'a 'b '((a d) (b a d) (d b) (c a))) ;; -> (A D B)
+(shortest-path-ls 'a 'c '((a d) (b a d) (d b) (c a))) ;; -> NIL
 
