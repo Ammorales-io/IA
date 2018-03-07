@@ -1063,7 +1063,7 @@
    (t connector)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; EJERCICIO 4.2.4
+;; EJERCICIO 4.2.3
 ;; Dada una FBF, que no contiene los conectores <=>, => 
 ;; evalua a una FNC equivalente en la que la negacion  
 ;; aparece unicamente en literales negativos
@@ -1594,8 +1594,6 @@
         (append (list (first rest-cnf)) (remove-subsumed-clauses first-fbf (rest rest-cnf)))
       (remove-subsumed-clauses first-fbf (rest rest-cnf)))))
 
-(first-needs-removal? '(c) '((b c) (a (~ c) b)  ((~ a) b) (a b (~ a)) (c b a)))
-(remove-subsumed-clauses '((~ c)) '((b c) (a (~ c) b)  ((~ a) b) (a b (~ a)) (c b a)))
 ;;
 ;;  EJEMPLOS:
 ;;
@@ -2052,7 +2050,6 @@
             (list NIL)
           (list (union resolved-K1 resolved-K2)))))))
 
-(resolve-on 'A '((~A)) '(nil))
 ;;
 ;;  EJEMPLOS:
 ;;
@@ -2450,9 +2447,6 @@
 
 (shortest-path 'a 'f '((a d) (b d f) (c e) (d f) (e b f) (f)))
 ;; --> (A D F)
-;;  
-;; Este resultado sucede porque
-
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;; Apartado 5.7 ;;;
