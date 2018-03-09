@@ -1,10 +1,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
 ;;    Lab assignment 2: Search
-;;    LAB GROUP: 
-;;    Couple:  
-;;    Author 1: 
-;;    Author 2:
+;;    LAB GROUP: 2363
+;;    Couple: 10
+;;    Author 1: Celia San Gregorio Moreno 
+;;    Author 2: Álvaro Martínez Morales
 ;;
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -79,15 +79,25 @@
 (defparameter *planets* '(Avalon Davion Katril Kentares Mallory Proserpina Sirtis))
 
 (defparameter *white-holes*  
-  '((Avalon Mallory 6.4) (Avalon Proserpina 8.6)...))
+  '((Avalon Mallory 6.4) (Avalon Proserpina 8.6) 
+    (Davion Proserpina 5.0) (Davion Sirtis 6.0) 
+    (Katril Mallory 10.0) (Katril Davion 9)
+    (Kentares Avalon 3.0) (Kentares Katril 10.0) (Kentares Proserpina 7.0)
+    (Mallory Proserpina 15.0) (Mallory Katril 10.0)
+    (Proserpina Avalen 8.6) (Proserpina Moallory 15.0) (Proserpina Davion 5.0) (Proserpina Sirtis 12.0)
+    (Sirtis Proserpina 12.0) (Sirtis Davion 6.0)))
 
 (defparameter *worm-holes*  
   '((Avalon Kentares 4) (Avalon Mallory 9)
     (Davion Katril 5) (Davion Sirtis 8)  
-    (Kentares Avalon 4) (Kentares Proserpina 12) ...))
+    (Katril Mallory 5) (Katril Davion 5) (Katril Sirtis 10)
+    (Kentares Avalon 4) (Kentares Proserpina 12)
+    (Mallory Avalon 9) (Mallory Proserpina 11) (Mallory Katril 5)
+    (Proserpina Kentares 12) (Proserpina Mallory 11) (Proserpina Sirtis 9)
+    (Sirtis Proserpina 9) (Sirtis Davion 8) (Sirtis Katril 10)))
  
 (defparameter *sensors* 
-  '((Avalon 15) (Davion 5) ...))
+  '((Avalon 15) (Mallory 12) (Kentares 14) (Davion 5) (Proserpina 7) (Katril 9) (Sirtis 0)))
 
 (defparameter *planet-origin* 'Mallory)
 (defparameter *planets-destination* '(Sirtis))
@@ -112,7 +122,7 @@
 ;;    The cost (a number) or NIL if the state is not in the sensor list
 ;;
 (defun f-h-galaxy (state sensors)
-  ...)
+  (second (assoc state sensors)))
 
 (f-h-galaxy 'Sirtis *sensors*) ;-> 0
 (f-h-galaxy 'Avalon *sensors*) ;-> 15
@@ -130,12 +140,32 @@
 ;; BEGIN: Exercise 2 -- Navigation operators
 ;;
 
+(defun make-colindant-list (state hole-map)
+  (if (null hole-map)
+      nil
+    (if (equal state (first (first hole-map)))
+        (cons (first hole-map) 
+              (make-colindant-list state (rest hole-map)))
+      (make-colindant-list state (rest hole-map)))))
 
+(make-colindant-list 'Avalon *white-holes*) ;->
+;;;((AVALON MALLORY 6.4) (AVALON PROSERPINA 8.6))
+
+(defun navigate (colindant-map)
+;Formación e impresión de estructuras  
+)
+                 
 (defun navigate-white-hole (state white-holes)
-  ...)
+  (navigate (make-colindant-list state white-holes)))
 
 (defun navigate-worm-hole (state worm-holes planets-forbidden)
-  ...)
+  (navigate (member (first planets-forbidden 
+                     (make-colindant-list state worm-holes) 
+                     :test-not #'equal
+                     :key #'second))))
+;; Habría que hacer que comprobase, creo, cada uno de los elementos del planets-forbidden, 
+;; por eso hay un union. ¿Quizás re-implementar 1.3.3? 
+)
 
 
 (navigate-worm-hole 'Mallory *worm-holes* *planets-forbidden*)  ;-> 
