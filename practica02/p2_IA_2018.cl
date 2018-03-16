@@ -230,7 +230,7 @@
 	 ;origen state en dicho grafo.
 	 ((equal hole-map *white-holes*)
 		(make-action-list (allowed-planets state hole-map planets-forbidden) "white"))
-     ;CASO 3: El grafo tiene agujeros de gusano.
+     	;CASO 3: El grafo tiene agujeros de gusano.
 	 ;Se crea una lista de acciones permitidas para el planeta
 	 ;origen state en dicho grafo.
 	 ((equal hole-map *worm-holes*)
@@ -294,7 +294,7 @@
 ;;
 
 (defun f-goal-test-galaxy (node planets-destination planets-mandatory) 
-  ...)
+  (not (null (member (node-state node) planets-destination))))
 
 
 (defparameter node-01
@@ -328,8 +328,12 @@
    :f-goal-test       #'(lambda (node) 
                           (f-goal-test-galaxy node *planets-destination*
                                                    *planets-mandatory*))
-   :f-h               ...
-   :operators         (list ...))) 
+   :f-h               #'(lambda (state)
+                          (f-h-galaxy state *sensors*))
+   :operators         (list #'(lambda (node)
+                                (navigate-white-hole (node-state node) *white-holes*))
+                            #'(lambda (node)
+                                (navigate-worm-hole (node-state node) *worm-holes* *planets-forbidden*))))) 
 
 ;;
 ;;  END: Exercise 4 -- Define the galaxy structure
@@ -342,8 +346,31 @@
 ;; BEGIN Exercise 5: Expand node
 ;;
 (defun expand-node (node problem)
-  ...)
-
+  (expand-node-aux node (problem-operators problem) problem))
+  
+(defun expand-node-aux (node op-list problem)
+  (if (null op-list)
+      nil
+    (append (create-node-list-from-action-list (funcall (first op-list) node) node problem) 
+            (expand-node-aux node (rest op-list)))))
+    
+(defun create-node-list-from-action-list (a-list parent-node problem)
+  (if (null a-list)
+      nil
+    (cons (let* ((nstate (action-final (first a-list)))
+                (ng (action-cost (first a-list)))
+                (nh (funcall (problem-f-h problem) nstate)))
+           (make-node 
+            :state nstate
+            :parent parent-node
+            :action (first a-list)
+            :depth (+ 1 (node-depth parent-node))
+            :g ng
+            :h nh
+            :f (+ ng nh)))
+          (create-node-list-from-action-list (rest a-list) parent-node problem))))
+           
+  
 (expand-node (make-node :state 'Kentares :depth 0 :g 0 :f 0) *galaxy-M35*)
 ;;;(#S(NODE :STATE AVALON
 ;;;         :PARENT #S(NODE :STATE KENTARES
