@@ -352,7 +352,7 @@
   (if (null op-list)
       nil
     (append (create-node-list-from-action-list (funcall (first op-list) node) node problem) 
-            (expand-node-aux node (rest op-list)))))
+            (expand-node-aux node (rest op-list) problem))))
     
 (defun create-node-list-from-action-list (a-list parent-node problem)
   (if (null a-list)
@@ -434,7 +434,9 @@
 ;;;  BEGIN Exercise 6 -- Node list management
 ;;;  
 (defun insert-nodes-strategy (nodes lst-nodes strategy)
-  ...)
+  (if (null nodes)
+      lst-nodes
+    ()))
 
 
 (defparameter node-01
