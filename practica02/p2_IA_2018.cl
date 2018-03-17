@@ -296,16 +296,16 @@
 (defun f-goal-test-galaxy (node planets-destination planets-mandatory) 
   (if (member (node-state node) planets-destination)
       (f-mandatory-test node planets-mandatory)
-    nil)))
+    nil))
 
 (defun f-mandatory-test (node planets-mandatory)
-  (cond ((member (node-state node) planets-mandatory)
-         (remove (node-state node) planets-mandatory)))
-  (if (null (node-parent node))
+  (if (null node)
       (if (null planets-mandatory)
           T
         nil)
-    (f-mandatory-test (node-parnt node) planets-mandatory)))
+    (if (member (node-state node) planets-mandatory)
+        (f-mandatory-test (node-parent node) (remove (node-state node) planets-mandatory))
+      (f-mandatory-test (node-parent node) planets-mandatory))))
 
 (defparameter node-01
    (make-node :state 'Avalon))
@@ -517,7 +517,13 @@
 ;;
 
 (defparameter *A-star*
-  (make-strategy ...))
+  (make-strategy
+   :name 'A-star
+   :node-compare-p #'lower-g+h))
+
+(defun lower-g+h (node1 node2)
+  (<= (node-f node1)
+      (node-f node2)))
 
 ;;
 ;; END: Exercise 7 -- Definition of the A* strategy
