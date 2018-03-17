@@ -1,6 +1,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
-;;    Lab assignment 2: Search a
+;;    Lab assignment 2: Search
 ;;    LAB GROUP: 2363
 ;;    Couple: 10
 ;;    Author 1: Celia San Gregorio Moreno 
