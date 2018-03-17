@@ -151,7 +151,7 @@
     ;Sino, comprueba si el planeta de origen (state)
     ;coincide con el planeta de origen del primer triplete.
     (if (equal state (first (first hole-map)))
-		;Si coincide, crea una lista de tripletes.
+        ;Si coincide, crea una lista de tripletes.
         (cons (first hole-map) 
               (make-colindant-list state (rest hole-map)))
       ;Sino, avanza en la lista asociativa hole-map.
@@ -168,28 +168,28 @@
   ;de planetas prohibidos o no hay planetas
   ;prohibidos, la función devuelve el mapa resultante.
   (if (null planets-forbidden)
-	colindant-map
-	(let ((bad-planet (first planets-forbidden)))
-		;En caso contrario comprueba si, por cada triplete, existe al 
-		;menos uno que tiene como segundo elemento (es decir, como destino) un planeta prohibido.
-		(if (> (count bad-planet colindant-map :test #'equal :key #'second) 0)
-			;Si se cumple la condición, elimina todos tripletes que
-			;contengan un planeta prohibido como destino.
-			(filter-forbidden-planets
-				(remove bad-planet colindant-map :key #'second) (rest planets-forbidden))
-			;Si no, deja la lista de tripletes como está y busca más
-			;planetas prohibidos para filtrar.
-			(filter-forbidden-planets colindant-map (rest planets-forbidden))))))
+      colindant-map
+    (let ((bad-planet (first planets-forbidden)))
+      ;En caso contrario comprueba si, por cada triplete, existe al 
+      ;menos uno que tiene como segundo elemento (es decir, como destino) un planeta prohibido.
+      (if (> (count bad-planet colindant-map :test #'equal :key #'second) 0)
+          ;Si se cumple la condición, elimina todos tripletes que
+          ;contengan un planeta prohibido como destino.
+          (filter-forbidden-planets
+           (remove bad-planet colindant-map :key #'second) (rest planets-forbidden))
+        ;Si no, deja la lista de tripletes como está y busca más
+        ;planetas prohibidos para filtrar.
+        (filter-forbidden-planets colindant-map (rest planets-forbidden))))))
 
 ;A partir de una lista de tripletes que representa un conjunto de
 ;agujeros negros o blancos, devuelve una lista de tripletes
 ;con los planetas a los que se puede acceder a partir del planeta
 ;de origen state.
 (defun allowed-planets (state hole-map planets-forbidden)
-   (let ((colindant-map (make-colindant-list state hole-map)))
-	;Filtra los planetas prohibidos de la lista de tripletes
-	;donde cada triplete tiene a state como origen.
-	(filter-forbidden-planets colindant-map planets-forbidden)))
+  (let ((colindant-map (make-colindant-list state hole-map)))
+    ;Filtra los planetas prohibidos de la lista de tripletes
+    ;donde cada triplete tiene a state como origen.
+    (filter-forbidden-planets colindant-map planets-forbidden)))
 
 ;Crea una lista de acciones a partir de una lista de tripletes. Esta
 ;lista de tripletes contiene todos los viajes que se pueden hacer
@@ -197,22 +197,22 @@
 ;Los planetas prohibidos han sido filtrados de la lista previamente
 ;por la función allowed-planets.
 (defun make-action-list (hole-map hole-type)
-	;Si hemos llegado al final de la lista de tripletes,
-	;la función termina.
-	(if (null hole-map)
-		nil
-		(let ((triplet (first hole-map)))
-			;Si el grafo corresponde a uno con agujeros blancos,
-			;crea una lista de acciones permitidas en este grafo.
-			(if (equal hole-type "white")
-				(cons
-					(make-action :name 'navigate-white-hole :origin (first triplet) :final (second triplet) :cost (third triplet))
-					(make-action-list (rest hole-map) hole-type))
-				;Si el grafo corresponde a uno con agujeros de gusano,
-				;crea una lista de acciones permitidas en este grafo.
-				(cons
-					(make-action :name 'navigate-worm-hole :origin (first triplet) :final (second triplet) :cost (third triplet))
-					(make-action-list (rest hole-map) hole-type))))))
+  ;Si hemos llegado al final de la lista de tripletes,
+  ;la función termina.
+  (if (null hole-map)
+      nil
+    (let ((triplet (first hole-map)))
+      ;Si el grafo corresponde a uno con agujeros blancos,
+      ;crea una lista de acciones permitidas en este grafo.
+      (if (equal hole-type "white")
+          (cons
+           (make-action :name 'navigate-white-hole :origin (first triplet) :final (second triplet) :cost (third triplet))
+           (make-action-list (rest hole-map) hole-type))
+        ;Si el grafo corresponde a uno con agujeros de gusano,
+        ;crea una lista de acciones permitidas en este grafo.
+        (cons
+         (make-action :name 'navigate-worm-hole :origin (first triplet) :final (second triplet) :cost (third triplet))
+         (make-action-list (rest hole-map) hole-type))))))
 
 ;Obtiene todas las acciones que se pueden realizar desde
 ;el planeta de origen state hasta sus sucesores inmediatos,
@@ -221,33 +221,33 @@
 ;Todos los planetas prohibidos se filtran mediante la
 ;función allowed-planets.
 (defun navigate (state hole-map planets-forbidden)
-   (cond
-	 ;CASO 1: El planeta no pertenece a la lista de planetas.
-	 ((null (member state *planets* :test #'equal))
-		nil)
-	 ;CASO 2: El grafo tiene agujeros blancos.
-	 ;Se crea una lista de acciones permitidas para el planeta
-	 ;origen state en dicho grafo.
-	 ((equal hole-map *white-holes*)
-		(make-action-list (allowed-planets state hole-map planets-forbidden) "white"))
-     	;CASO 3: El grafo tiene agujeros de gusano.
-	 ;Se crea una lista de acciones permitidas para el planeta
-	 ;origen state en dicho grafo.
-	 ((equal hole-map *worm-holes*)
-		(make-action-list (allowed-planets state hole-map planets-forbidden) "worm"))
-	 (t NIL)))
+  (cond
+   ;CASO 1: El planeta no pertenece a la lista de planetas.
+   ((null (member state *planets* :test #'equal))
+    nil)
+   ;CASO 2: El grafo tiene agujeros blancos.
+   ;Se crea una lista de acciones permitidas para el planeta
+   ;origen state en dicho grafo.
+   ((equal hole-map *white-holes*)
+    (make-action-list (allowed-planets state hole-map planets-forbidden) "white"))
+   ;CASO 3: El grafo tiene agujeros de gusano.
+   ;Se crea una lista de acciones permitidas para el planeta
+   ;origen state en dicho grafo.
+   ((equal hole-map *worm-holes*)
+    (make-action-list (allowed-planets state hole-map planets-forbidden) "worm"))
+   (t NIL)))
 	 
 ;Operador que devuelve una lista de acciones que se
 ;pueden hacer a partir del estado state, sobre un
 ;grafo con agujeros negros.	
 (defun navigate-white-hole (state white-holes)
-	(navigate state white-holes nil))
+  (navigate state white-holes nil))
 
 ;Operador que devuelve una lista de acciones que se
 ;pueden hacer a partir del estado state, sobre un
 ;grafo con agujeros de gusano.	
 (defun navigate-worm-hole (state worm-holes planets-forbidden)
-   (navigate state worm-holes planets-forbidden))
+  (navigate state worm-holes planets-forbidden))
 
 
                  
@@ -294,11 +294,21 @@
 ;;
 
 (defun f-goal-test-galaxy (node planets-destination planets-mandatory) 
-  (not (null (member (node-state node) planets-destination))))
+  (if (member (node-state node) planets-destination)
+      (f-mandatory-test node planets-mandatory)
+    nil)))
 
+(defun f-mandatory-test (node planets-mandatory)
+  (cond ((member (node-state node) planets-mandatory)
+         (remove (node-state node) planets-mandatory)))
+  (if (null (node-parent node))
+      (if (null planets-mandatory)
+          T
+        nil)
+    (f-mandatory-test (node-parnt node) planets-mandatory)))
 
 (defparameter node-01
-   (make-node :state 'Avalon) )
+   (make-node :state 'Avalon))
 (defparameter node-02
    (make-node :state 'Kentares :parent node-01))
 (defparameter node-03
