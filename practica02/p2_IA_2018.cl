@@ -446,8 +446,21 @@
 (defun insert-nodes-strategy (nodes lst-nodes strategy)
   (if (null nodes)
       lst-nodes
-    ()))
+    (insert-nodes-strategy (rest nodes)
+                           (insert-node-strategy (first nodes)
+                                                 lst-nodes
+                                                 strategy)
+                           strategy)))
 
+(defun insert-node-strategy (node lst-nodes strategy)
+  (if (null lst-nodes)
+      (list node)
+    (if (funcall strategy 
+                 node 
+                 (first lst-nodes))
+        (append (list node) lst-nodes)
+      (append (list (first lst-nodes)) insert-node-strategy node (rest lst-nodes) strategy))))
+  
 
 (defparameter node-01
    (make-node :state 'Avalon :depth 0 :g 0 :f 0) )
