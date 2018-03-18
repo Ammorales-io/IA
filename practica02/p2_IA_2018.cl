@@ -84,7 +84,7 @@
     (Katril Mallory 10) (Katril Davion 9)
     (Kentares Avalon 3) (Kentares Katril 10) (Kentares Proserpina 7)
     (Mallory Katril 10) (Mallory Proserpina 15) 
-    (Proserpina Avalen 8.6) (Proserpina Moallory 15) (Proserpina Davion 5) (Proserpina Sirtis 12)
+    (Proserpina Avalon 8.6) (Proserpina Mallory 15) (Proserpina Davion 5) (Proserpina Sirtis 12)
     (Sirtis Proserpina 12) (Sirtis Davion 6)))
 
 (defparameter *worm-holes*  
@@ -293,18 +293,31 @@
 ;; BEGIN: Exercise 3 -- Goal test
 ;;
 
-(defun f-goal-test-galaxy (node planets-destination planets-mandatory) 
+;Comprueba si el nodo pasado como argumento es un estado objetivo
+(defun f-goal-test-galaxy (node planets-destination planets-mandatory)
+  ;Si el nodo está entre la lista de planetas destino,
+  ;comprueba que los nodos antecesores hayan pasado por
+  ;los planetas obligatorios.
   (if (member (node-state node) planets-destination)
       (f-mandatory-test node planets-mandatory)
     nil))
 
+;Comprueba si en el camino del nodo raíz al nodo actual
+;se ha pasado por los planetas obligatorios.
 (defun f-mandatory-test (node planets-mandatory)
+  ;Si hemos llegado al nodo raíz...
   (if (null node)
+      ;Y la lista de planetas obligatorios está vacía,
+      ;hemos pasado por todos los planetas obligatorios.
       (if (null planets-mandatory)
           T
         nil)
+    ;Si aún no hemos llegado al nodo raíz, comprueba si el nodo actual
+    ;es un planeta obligatorio.
     (if (member (node-state node) planets-mandatory)
+        ;Si lo es, elimina el nodo de la lista de planetas obligatorios.
         (f-mandatory-test (node-parent node) (remove (node-state node) planets-mandatory))
+      ;Sino, comprueba si el nodo padre es obligatorio.
       (f-mandatory-test (node-parent node) planets-mandatory))))
 
 (defparameter node-01
@@ -355,20 +368,32 @@
 ;;
 ;; BEGIN Exercise 5: Expand node
 ;;
+
+;Obtiene la lista de nodos a los que se puede acceder
+;desde el nodo actual, utilizando todos los operadores
+;(agujeros blancos y de gusano).
 (defun expand-node (node problem)
   (expand-node-aux node (problem-operators problem) problem))
-  
+
 (defun expand-node-aux (node op-list problem)
+  ;Si llega al final de la lista de operadores, termina.
   (if (null op-list)
       nil
+    ;Sino, crea una lista con cada uno de los nodos
+    ;obtenidos a partir de la información de cada acción.
     (append (create-node-list-from-action-list (funcall (first op-list) node) node problem) 
             (expand-node-aux node (rest op-list) problem))))
     
+;Crea una lista de nodos a partir de una lista de acciones
 (defun create-node-list-from-action-list (a-list parent-node problem)
+  ;Fin de la lista de acciones: termina.
   (if (null a-list)
       nil
+    ;Crea una lista de nodos a partir de la información
+    ;de cada acción.
     (cons (let* ((nstate (action-final (first a-list)))
-                (ng (action-cost (first a-list)))
+                ;(ng (action-cost (first a-list)))
+				(ng (+ (action-cost (first a-list)) (node-g parent-node))) ;Coste desde la raíz hasta el nodo actual.
                 (nh (funcall (problem-f-h problem) nstate)))
            (make-node 
             :state nstate
@@ -442,30 +467,62 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;;  BEGIN Exercise 6 -- Node list management
-;;;  
+;;; 
+
+;Obtiene una lista de nodos ordenada según el criterio
+;de comparación especificado en la estrategia strategy.
 (defun insert-nodes-strategy (nodes lst-nodes strategy)
+  ;Si la lista de nodos está vacía, termina.
   (if (null nodes)
       lst-nodes
+    ;Sino, va añadiendo cada nodo de nodes a la lista ordenada 
+    ;lst-nodes mediante sucesivas llamadas a insert-node-strategy.
     (insert-nodes-strategy (rest nodes)
                            (insert-node-strategy (first nodes)
                                                  lst-nodes
                                                  strategy)
                            strategy)))
 
+;(defun get-ordered-node-lst (nodes lst-nodes strategy)
+  ;(if (null nodes)
+      ;lst-nodes
+    ;(let ((lista (insert-node-strategy (first nodes) lst-nodes strategy)))
+        ;(get-ordered-node-lst (rest nodes) lista strategy))))
+
+;Inserta un nodo en la lista ordenada de nodos de acuerdo
+;al orden sobre el que se rige lst-nodes (indicado por strategy).
 (defun insert-node-strategy (node lst-nodes strategy)
+  ;Si la lista de nodos ordenada por g está vacía, termina.
   (if (null lst-nodes)
       (list node)
-    (if (funcall strategy 
+    ;Si la función de comparación de strategy indica que el
+    ;parámetro a comparar de node es menor que el primer
+    ;elemento de lst-nodes...
+    (if (funcall (strategy-node-compare-p strategy) 
                  node 
                  (first lst-nodes))
+	    ;Node pasa a ser el primer elemento de la lista ordenada.
         (append (list node) lst-nodes)
-      (append (list (first lst-nodes)) insert-node-strategy node (rest lst-nodes) strategy))))
+      ;Sino, sigue mirando en qué posición insertar el nodo de acuerdo al orden.
+      (append (list (first lst-nodes)) (insert-node-strategy node (rest lst-nodes) strategy)))))
   
-
+(defparameter node-00
+   (make-node :state 'Proserpina :depth 12 :g 10 :f 20) )
 (defparameter node-01
    (make-node :state 'Avalon :depth 0 :g 0 :f 0) )
 (defparameter node-02
    (make-node :state 'Kentares :depth 2 :g 50 :f 50) )
+
+(defparameter lst-nodes-00 (sort (expand-node node-00 *galaxy-M35*) #'<= :key #'node-g))
+
+(defun node-g-<= (node-1 node-2)
+  (<= (node-g node-1)
+      (node-g node-2)))
+
+(defparameter *uniform-cost*
+  (make-strategy
+   :name 'uniform-cost
+   :node-compare-p #'node-g-<=))
 
 (print (insert-nodes-strategy (list node-00 node-01 node-02) 
                         lst-nodes-00 
@@ -529,14 +586,14 @@
 ;; node to be analyzed is the one with the smallest value of g+h
 ;;
 
+(defun lower-g+h (node1 node2)
+  (<= (node-f node1)
+      (node-f node2)))
+
 (defparameter *A-star*
   (make-strategy
    :name 'A-star
    :node-compare-p #'lower-g+h))
-
-(defun lower-g+h (node1 node2)
-  (<= (node-f node1)
-      (node-f node2)))
 
 ;;
 ;; END: Exercise 7 -- Definition of the A* strategy
@@ -550,8 +607,62 @@
 ;;;    BEGIN Exercise 8: Search algorithm
 ;;;
 (defun graph-search (problem strategy)
-  ...)
+  (let* ((initial-planet (problem-initial-state problem))	;Nombre del planeta inicial.
+		 (ng 0)												;Valor de g del nodo raíz.
+		 (nh (funcall (problem-f-h problem) initial-planet));Valor de h del nodo raíz.
+		 (root-node (make-node :state initial-planet		;Nodo raíz del problema con el planeta inicial.
+							   :parent nil
+							   :action nil
+							   :depth 0
+							   :g ng
+							   :h nh
+							   :f (+ ng nh)))
+		(open-nodes (list root-node))						;Lista abierta con el nodo raíz.
+        (closed-nodes nil))									;Lista cerrada vacía.
+	(graph-search-rec open-nodes closed-nodes problem strategy)))
 
+(defun graph-search-rec (open-nodes closed-nodes problem strategy)
+  (if (null open-nodes)
+    nil
+    (let ((current-node (first open-nodes)))
+	    (if (f-goal-test-galaxy current-node *planets-destination* *planets-mandatory*) ;El nodo a expandir es el objetivo
+			;Evaluar a la solución.
+			(first (get-solution current-node))
+			;Comprueba si el nodo no está en la lista cerrada o,
+			;si está en ella, si tiene un valor de g inferior al primer nodo de closed-nodes.
+			(if (or (null (member current-node closed-nodes))
+					(< (node-g current-node) (node-g (first closed-nodes))))
+				;Expande el nodo actual e inserta los hijos en open-nodes, ordenados de
+				;acuerdo al criterio de comparación de strategy.
+				;
+				;También inserta el nodo actual en la lista cerrada closed-nodes.
+				(let ((new-open-nodes (insert-nodes-strategy (expand-node current-node problem) open-nodes strategy))
+					  (new-closed-nodes (append (list current-node) closed-nodes)))
+					;Continúa la búsqueda eliminando el nodo expandido actual
+					;de la lista abierta.
+					(graph-search-rec (remove current-node new-open-nodes) new-closed-nodes problem strategy))
+				;Si el nodo a expandir no cumple las condiciones, se elimina directamente
+				;de la lista abierta.
+				(graph-search-rec (remove current-node open-nodes) closed-nodes problem strategy))))))
+		
+				
+(defun get-solution (node)
+  (if (null node)
+	nil
+	(append (list node) (get-solution (node-parent node)))))
+
+
+(defparameter node-00
+   (make-node :state 'Kentares :parent nil :action nil :depth 0 :g 0 :h 14 :f 14) )
+
+(defparameter node-01
+   (make-node :state 'Proserpina :parent node-00 
+								 :action (make-action :name 'navigate-while-hole :origin 'Kentares :final 'Proserpina :cost 7) 
+								 :depth 1 :g 7 :h 7 :f 14) )
+(defparameter node-02
+   (make-node :state 'Sirtis :parent node-01
+								 :action (make-action :name 'navigate-while-hole :origin 'Proserpina :final 'Sirtis :cost 12) 
+								 :depth 2 :g 19 :h 0 :f 19) )
 
 ;
 ;  Solve a problem using the A* strategy
