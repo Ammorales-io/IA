@@ -631,7 +631,7 @@
 			;Comprueba si el nodo no está en la lista cerrada o,
 			;si está en ella, si tiene un valor de g inferior al primer nodo de closed-nodes.
 			(if (or (null (member current-node closed-nodes))
-					(< (node-g current-node) (node-g (first closed-nodes))))
+					 (< (node-g current-node) (node-g (first closed-nodes))))
 				;Expande el nodo actual e inserta los hijos en open-nodes, ordenados de
 				;acuerdo al criterio de comparación de strategy.
 				;
@@ -652,22 +652,32 @@
 	(append (list node) (get-solution (node-parent node)))))
 
 
-(defparameter node-00
-   (make-node :state 'Kentares :parent nil :action nil :depth 0 :g 0 :h 14 :f 14) )
+(defparameter nodo1 (make-node :state 'Mallory :parent nil :action nil :depth 0 :g 0 :h 12 :f 12) )
+(defparameter nodo2
+   (make-node :state 'Katril :parent nodo1
+								 :action (make-action :name 'navigate-worm-hole :origin 'Mallory :final 'Katril :cost 5) 
+								 :depth 1 :g 5 :h 9 :f 14) )
+(defparameter nodo3
+   (make-node :state 'Sirtis :parent nodo2
+								 :action (make-action :name 'navigate-worm-hole :origin 'Katril :final 'Sirtis :cost 10) 
+								 :depth 2 :g 15 :h 0 :f 15) )
+(defparameter nodo4
+   (make-node :state 'Davion :parent nodo2
+								 :action (make-action :name 'navigate-worm-hole :origin 'Katril :final 'Davion :cost 5) 
+								 :depth 2 :g 10 :h 5 :f 15) )
 
-(defparameter node-01
-   (make-node :state 'Proserpina :parent node-00 
-								 :action (make-action :name 'navigate-while-hole :origin 'Kentares :final 'Proserpina :cost 7) 
-								 :depth 1 :g 7 :h 7 :f 14) )
-(defparameter node-02
-   (make-node :state 'Sirtis :parent node-01
-								 :action (make-action :name 'navigate-while-hole :origin 'Proserpina :final 'Sirtis :cost 12) 
-								 :depth 2 :g 19 :h 0 :f 19) )
+(defparameter nodo5
+   (make-node :state 'Sirtis :parent nodo3
+								 :action (make-action :name 'navigate-worm-hole :origin 'Davion :final 'Sirtis :cost 8) 
+								 :depth 3 :g 16 :h 0 :f 16) )
+
+(defparameter lista-cerrada (list nodo4 nodo3 nodo2 nodo1))
 
 ;
 ;  Solve a problem using the A* strategy
 ;
-(defun a-star-search (problem)...)
+(defun a-star-search (problem)
+  (graph-search problem *A-star*))
 
 
 (graph-search *galaxy-M35* *A-star*);->
@@ -694,13 +704,18 @@
 ;;;    BEGIN Exercise 9: Solution path / action sequence
 ;;;
 (defun solution-path (node)
-  ...)
+  (reverse (get-solution-path node)))
+
+(defun get-solution-path (node)
+  (if (null node)
+	nil
+	(cons (node-state node) (get-solution-path (node-parent node)))))
 
 (solution-path nil) ;;; -> NIL 
 (solution-path (a-star-search *galaxy-M35*))  ;;;-> (MALLORY ...)
 
-(defun action-sequence-aux (node)
-  ...)
+(defun action-sequence (node)
+...)
 
 (action-sequence (a-star-search *galaxy-M35*))
 ;;; ->
