@@ -133,7 +133,6 @@
 (f-h-galaxy 'Avalon *sensors*) ;-> 15
 (f-h-galaxy 'Earth  *sensors*) ;-> NIL
 
-
 ;;
 ;; END: Exercise 1 -- Evaluation of the heuristic
 ;;
@@ -145,9 +144,20 @@
 ;; BEGIN: Exercise 2 -- Navigation operators
 ;;
 
-;Crea una lista de tripletes con state como planeta origen
-;y cada uno de los planetas en el agujero blanco o de gusano
-;a los que puede acceder.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Crea una lista de tripletes con state como planeta de origen
+;; y cada uno de los planetas en el agujero blanco o de gusano
+;; a los que se puede acceder desde state.
+;;
+;;  Input:
+;;    state: el estado actual (el planeta donde estamos)
+;;    hole-map: lista de tripletes correspondiente a los grafos
+;;              de la galaxia (en este caso, agujeros blancos
+;;              o de gusano).
+;;
+;;  Returns:
+;;    Lista de tripletes de tipo (<state> <planeta-destino> <coste>).
 (defun make-colindant-list (state hole-map)
   ;Si hemos llegado al final de la lista
   ;asociativa, la función termina.
@@ -162,12 +172,19 @@
       ;Sino, avanza en la lista asociativa hole-map.
       (make-colindant-list state (rest hole-map)))))
 
-(make-colindant-list 'Avalon *white-holes*)
-;;; ((AVALON MALLORY 6.4) (AVALON PROSERPINA 8.6))
-
-;Elimina los planetas prohibidos de una lista de tripletes
-;que tienen como origen un planeta y como destino los
-;planetas directamente accesibles desde el origen.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Elimina los planetas prohibidos de una lista de tripletes
+;; que tienen como origen un planeta y como destino los
+;; planetas directamente accesibles desde el origen.
+;;
+;;  Input:
+;;    colindant-map: lista de tripletes descrita anteriormente.
+;;    planets-forbidden: lista de nombres de planetas prohibidos.
+;;
+;;  Returns:
+;;    Lista de tripletes de tipo (<state> <planeta-destino> <coste>),
+;;    sin planetas prohibidos como <planeta-destino>.
 (defun filter-forbidden-planets (colindant-map planets-forbidden)
   ;Si hemos llegado al final de la lista
   ;de planetas prohibidos o no hay planetas
@@ -186,21 +203,47 @@
         ;planetas prohibidos para filtrar.
         (filter-forbidden-planets colindant-map (rest planets-forbidden))))))
 
-;A partir de una lista de tripletes que representa un conjunto de
-;agujeros negros o blancos, devuelve una lista de tripletes
-;con los planetas a los que se puede acceder a partir del planeta
-;de origen state.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; A partir de una lista de tripletes que representa un conjunto de
+;; agujeros negros o blancos, devuelve una lista de tripletes
+;; con los planetas a los que se puede acceder a partir del planeta
+;; de origen.
+;;
+;;  Input:
+;;    state: estado de búsqueda que representa al planeta de origen.
+;;    hole-map: lista de tripletes correspondiente a los grafos
+;;              de la galaxia (en este caso, agujeros blancos
+;;              o de gusano).
+;;    planets-forbidden: lista de nombres de planetas prohibidos.
+;;
+;;  Returns:
+;;    Lista de tripletes de tipo (<state> <planeta-destino> <coste>),
+;;    sin planetas prohibidos como <planeta-destino>.
 (defun allowed-planets (state hole-map planets-forbidden)
   (let ((colindant-map (make-colindant-list state hole-map)))
     ;Filtra los planetas prohibidos de la lista de tripletes
     ;donde cada triplete tiene a state como origen.
     (filter-forbidden-planets colindant-map planets-forbidden)))
 
-;Crea una lista de acciones a partir de una lista de tripletes. Esta
-;lista de tripletes contiene todos los viajes que se pueden hacer
-;desde el planeta origen hasta los sucesores.
-;Los planetas prohibidos han sido filtrados de la lista previamente
-;por la función allowed-planets.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Crea una lista de acciones a partir de una lista de tripletes. 
+;; Esta lista de tripletes contiene todos los viajes que se pueden hacer
+;; desde el planeta origen hasta los sucesores.
+;;
+;; Los planetas prohibidos han sido filtrados de la lista previamente
+;; por la función allowed-planets.
+;;
+;;  Input:
+;;    hole-map: lista de tripletes correspondiente a los grafos
+;;              de la galaxia (en este caso, agujeros blancos
+;;              o de gusano).
+;;    hole-type: tipo de agujero (en este caso, blanco o de gusano)
+;;
+;;  Returns:
+;;    Lista de acciones del planeta de origen al de destino, a
+;;    través del agujero correspondiente.
 (defun make-action-list (hole-map hole-type)
   ;Si hemos llegado al final de la lista de tripletes,
   ;la función termina.
@@ -219,12 +262,25 @@
          (make-action :name 'navigate-worm-hole :origin (first triplet) :final (second triplet) :cost (third triplet))
          (make-action-list (rest hole-map) hole-type))))))
 
-;Obtiene todas las acciones que se pueden realizar desde
-;el planeta de origen state hasta sus sucesores inmediatos,
-;diferenciando entre agujeros blancos y de gusano.
-;
-;Todos los planetas prohibidos se filtran mediante la
-;función allowed-planets.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Obtiene todas las acciones que se pueden realizar desde
+;; el planeta de origen hasta sus sucesores inmediatos,
+;; diferenciando entre agujeros blancos y de gusano.
+;;
+;; Los planetas prohibidos han sido filtrados de la lista previamente
+;; por la función allowed-planets.
+;;
+;;  Input:
+;;    state: estado de búsqueda que representa al planeta de origen.
+;;    hole-map: lista de tripletes correspondiente a los grafos
+;;              de la galaxia (en este caso, agujeros blancos
+;;              o de gusano).
+;;    hole-type: tipo de agujero (en este caso, blanco o de gusano)
+;;
+;;  Returns:
+;;    Lista de acciones del planeta de origen al de destino, a
+;;    través del agujero correspondiente.
 (defun navigate (state hole-map planets-forbidden)
   (cond
    ;CASO 1: El planeta no pertenece a la lista de planetas.
@@ -242,20 +298,41 @@
     (make-action-list (allowed-planets state hole-map planets-forbidden) "worm"))
    (t NIL)))
 	 
-;Operador que devuelve una lista de acciones que se
-;pueden hacer a partir del estado state, sobre un
-;grafo con agujeros negros.	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Operador que devuelve una lista de acciones que se
+;; pueden hacer a partir del estado state, sobre un
+;; grafo con agujeros blancos.
+;;
+;;  Input:
+;;    state: estado de búsqueda que representa al planeta de origen.
+;;    white-holes: lista de tripletes correspondiente al grafo de
+;;                 agujeros blancos de la galaxia.
+;;
+;;  Returns:
+;;    Lista de acciones del planeta de origen al de destino, a
+;;    través de los agujeros blancos.
 (defun navigate-white-hole (state white-holes)
   (navigate state white-holes nil))
 
-;Operador que devuelve una lista de acciones que se
-;pueden hacer a partir del estado state, sobre un
-;grafo con agujeros de gusano.	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Operador que devuelve una lista de acciones que se
+;; pueden hacer a partir del estado state, sobre un
+;; grafo con agujeros de gusano.
+;;
+;;  Input:
+;;    state: estado de búsqueda que representa al planeta de origen.
+;;    white-holes: lista de tripletes correspondiente al grafo de
+;;                 agujeros de gusano de la galaxia.
+;;
+;;  Returns:
+;;    Lista de acciones del planeta de origen al de destino, a
+;;    través de los agujeros de gusano.
 (defun navigate-worm-hole (state worm-holes planets-forbidden)
   (navigate state worm-holes planets-forbidden))
 
 
-                 
 ;(defun navigate-white-hole (state white-holes)
   ;(navigate (make-colindant-list state white-holes)))
 
@@ -286,7 +363,6 @@
 
 (navigate-worm-hole 'Uranus *worm-holes* *planets-forbidden*)  ;-> NIL
 
-
 ;;
 ;; END: Exercise 2 -- Navigation operators
 ;;
@@ -298,17 +374,37 @@
 ;; BEGIN: Exercise 3A -- Goal test
 ;;
 
-;Comprueba si el nodo pasado como argumento es un estado objetivo
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Comprueba si el nodo pasado como argumento es un estado objetivo.
+;;
+;;  Input:
+;;    nodo: nodo que representa un estado de búsqueda (el planeta actual).
+;;    planets-destination: lista de nombres de los planetas destino.
+;;    planets-mandatory: lista de nombres de los planetas obligatorios.
+;;
+;;  Returns:
+;;    T si el nodo es un estado objetivo, NIL si no.
 (defun f-goal-test-galaxy (node planets-destination planets-mandatory)
   ;Si el nodo está entre la lista de planetas destino,
   ;comprueba que los nodos antecesores hayan pasado por
   ;los planetas obligatorios.
   (if (member (node-state node) planets-destination)
-      (f-mandatory-test node planets-mandatory)
-    nil))
+      ;(f-mandatory-test node planets-mandatory)
+       (f-mandatory-test (node-parent node) planets-mandatory) ;Comprueba si los nodos padre corresponden
+    nil))                                                      ;a planetas obligatorios visitados.
 
-;Comprueba si en el camino del nodo raíz al nodo actual
-;se ha pasado por los planetas obligatorios.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Comprueba si en el camino del nodo raíz al nodo actual
+;; se ha pasado por los planetas obligatorios.
+;;
+;;  Input:
+;;    nodo: nodo que representa un estado de búsqueda (el planeta actual).
+;;    planets-mandatory: lista de nombres de los planetas obligatorios.
+;;
+;;  Returns:
+;;    T si se ha pasado por todos los nodos obligatorios, NIL si no.
 (defun f-mandatory-test (node planets-mandatory)
   ;Si hemos llegado al nodo raíz...
   (if (null node)
@@ -337,18 +433,80 @@
 (defparameter node-04
    (make-node :state 'Kentares :parent node-03))
 
-(f-goal-test-galaxy node-01 '(kentares urano) '(Avalon Katril)); -> NIL
-(f-goal-test-galaxy node-02 '(kentares urano) '(Avalon Katril)); -> NIL
-(f-goal-test-galaxy node-03 '(kentares urano) '(Avalon Katril)); -> NIL
-(f-goal-test-galaxy node-04 '(kentares urano) '(Avalon Katril)); -> T
+(f-goal-test-galaxy node-01 '(Kentares Uranus) '(Avalon Katril)); -> NIL
+(f-goal-test-galaxy node-02 '(Kentares Uranus) '(Avalon Katril)); -> NIL
+(f-goal-test-galaxy node-03 '(Kentares Uranus) '(Avalon Katril)); -> NIL
+(f-goal-test-galaxy node-04 '(Kentares Uranus) '(Avalon Katril)); -> T
 
 
 ;;
 ;; END: Exercise 3A -- Goal test
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; BEGIN: Exercise 3B -- Node equality
+;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Comprueba si dos nodos son iguales mediante estos criterios:
+;;
+;;	 - Mismo estado de búsqueda (nombre de planeta), si no se
+;;    especifican planetas obligatorios como parámetro.
+;;  - Mismo estado de búsqueda y lista de planetas obligatorios
+;;    por visitar, si se especifican planetas obligatorios.
+;;
+;;  Input:
+;;    node-1: nodo que representa un estado de búsqueda (un planeta).
+;;    node-2: nodo que representa otro estado de búsqueda.
+;;    planets-mandatory: lista de nombres de los planetas obligatorios.
+;;
+;;  Returns:
+;;    T si los nodos son iguales, NIL si no.
 (defun f-search-state-equal-galaxy (node-1 node-2 &optional planets-mandatory)
- ...)
+	;Si alguno de los nodos pasados como parámetro es NIL,
+	;la función termina.
+    (if (or (null node-1) (null node-2))
+	  nil
+	  (let ((planet-1 (node-state node-1))
+		    (planet-2 (node-state node-2)))
+	    ;Si no se han especificado planetas obligatorios,
+	    ;se comprueba si el nombre de los planetas es igual.
+	    (if (null planets-mandatory)
+	      (equal planet-1 planet-2)
+	      ;En caso contrario, comprueba si el nombre de los planetas
+	      ;y la lista de planetas por visitar coinciden.
+	      (let ((planets-not-visited-node-1 (get-mandantory-planets-not-visited (node-parent node-1) planets-mandatory))
+			    (planets-not-visited-node-2 (get-mandantory-planets-not-visited (node-parent node-2) planets-mandatory)))
+			  (and (equal planet-1 planet-2)
+		           (equal planets-not-visited-node-1 planets-not-visited-node-2)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Devuelve una lista de planetas obligatorios aún no visitados.
+;;
+;;  Input:
+;;    node: nodo que representa un estado de búsqueda (el planeta actual).
+;;    planets-mandatory: lista de nombres de los planetas obligatorios.
+;;
+;;  Returns:
+;;    Lista con los nombres de los planetas obligatorios que aún 
+;;    queden por visitar, o NIL si se han visitado todos.
+(defun get-mandantory-planets-not-visited (node planets-mandatory)
+  ;Si llegamos al nodo raíz, devolvemos
+  ;la lista de planetas que quedan por visitar.
+  (if (null node)
+    planets-mandatory
+    ;Si aún no hemos llegado al nodo raíz, comprueba si el nodo actual
+    ;es un planeta obligatorio.
+    (if (member (node-state node) planets-mandatory :test #'equal)
+      ;Si es un planeta obligatorio, lo elimina de la lista y pasa a comprobar el nodo padre.
+      (get-mandantory-planets-not-visited (node-parent node) (remove (node-state node) planets-mandatory))
+      ;Si no es obligatorio, pasa a comprobar el nodo padre directamente.
+      (get-mandantory-planets-not-visited (node-parent node) planets-mandatory))))
 
 ;;;
 ;;; EJEMPLOS
@@ -364,11 +522,6 @@
 (f-search-state-equal-galaxy node-01 node-01 '(Avalon Katril)) ;-> T
 (f-search-state-equal-galaxy node-01 node-02 '(Avalon Katril)) ;-> NIL
 (f-search-state-equal-galaxy node-02 node-04 '(Avalon Katril)) ;-> NIL
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; BEGIN: Exercise 3B -- Node equality
-;;
 
 ;;
 ;; END: Exercise 3B -- Node equality
@@ -390,6 +543,8 @@
                                                    *planets-mandatory*))
    :f-h               #'(lambda (state)
                           (f-h-galaxy state *sensors*))
+   :f-search-state-equal #'(lambda (node-1 node-2) 
+                             (f-search-state-equal-galaxy node-1 node-2))
    :operators         (list #'(lambda (node)
                                 (navigate-white-hole (node-state node) *white-holes*))
                             #'(lambda (node)
@@ -406,22 +561,57 @@
 ;; BEGIN Exercise 5: Expand node
 ;;
 
-;Obtiene la lista de nodos a los que se puede acceder
-;desde el nodo actual, utilizando todos los operadores
-;(agujeros blancos y de gusano).
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Obtiene la lista de nodos a los que se puede acceder
+;; desde el nodo actual, utilizando todos los operadores
+;; (agujeros blancos y de gusano).
+;;
+;;  Input:
+;;    node: nodo que representa un estado de búsqueda (el planeta actual).
+;;    problem: problema de búsqueda.
+;;
+;;  Returns:
+;;    Lista de nodos directamente accesibles desde el nodo actual,
+;;    teniendo en cuenta todos los operadores del problema.
 (defun expand-node (node problem)
   (expand-node-aux node (problem-operators problem) problem))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Obtiene una lista de nodos a los que se puede acceder
+;; desde el nodo actual, de forma recursiva y teniendo
+;; en cuenta todos los operadores del problema.
+;;
+;;  Input:
+;;    node: nodo que representa un estado de búsqueda (el planeta actual).
+;;    op-list: lista de operadores del problema (en este caso, agujeros 
+;;             blancos y de gusano).
+;;    problem: problema de búsqueda.
+;;
+;;  Returns:
+;;    Lista de nodos directamente accesibles desde el nodo actual,
+;;    teniendo en cuenta todos los operadores del problema.
 (defun expand-node-aux (node op-list problem)
   ;Si llega al final de la lista de operadores, termina.
   (if (null op-list)
       nil
     ;Sino, crea una lista con cada uno de los nodos
-    ;obtenidos a partir de la información de cada acción.
+    ;obtenidos a partir de la información de las acciones desde el nodo actual.
     (append (create-node-list-from-action-list (funcall (first op-list) node) node problem) 
             (expand-node-aux node (rest op-list) problem))))
     
-;Crea una lista de nodos a partir de una lista de acciones
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Crea una lista de nodos a partir de una lista de acciones.
+;;
+;;  Input:
+;;    a-list: lista de acciones que se pueden hacer desde el nodo actual.
+;;    node: nodo que representa el estado de búsqueda actual.
+;;    problem: problema de búsqueda.
+;;
+;;  Returns:
+;;    Lista de nodos directamente accesibles desde el nodo actual.
 (defun create-node-list-from-action-list (a-list parent-node problem)
   ;Fin de la lista de acciones: termina.
   (if (null a-list)
@@ -629,8 +819,20 @@
 ;;;  BEGIN Exercise 6 -- Node list management
 ;;; 
 
-;Obtiene una lista de nodos ordenada según el criterio
-;de comparación especificado en la estrategia strategy.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Obtiene una lista de nodos ordenada según el criterio
+;; de comparación especificado en la estrategia strategy.
+;;
+;;  Input:
+;;    nodes: lista de nodos sin ordenar.
+;;    lst-nodes: lista de nodos ordenada según la función de 
+;;               comparación de strategy.
+;;    strategy: estrategia de búsqueda.
+;;
+;;  Returns:
+;;    Lista de nodos a la que se ha añadido cada nodo de nodes,
+;;    todos ellos ordenados según el criterio de strategy.
 (defun insert-nodes-strategy (nodes lst-nodes strategy)
   ;Si la lista de nodos está vacía, termina.
   (if (null nodes)
@@ -643,8 +845,20 @@
                                                  strategy)
                            strategy)))
 
-;Inserta un nodo en la lista ordenada de nodos de acuerdo
-;al orden sobre el que se rige lst-nodes (indicado por strategy).
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Inserta un nodo en la lista ordenada de nodos de acuerdo
+;; al criterio de comparación indicado por strategy.
+;;
+;;  Input:
+;;    node: nodo que se va a insertar en la lista.
+;;    lst-nodes: lista de nodos ordenada según la función de 
+;;               comparación de strategy.
+;;    strategy: estrategia de búsqueda.
+;;
+;;  Returns:
+;;    Lista de nodos a la que se ha añadido el nodo,
+;;    ordenada según el criterio de strategy.
 (defun insert-node-strategy (node lst-nodes strategy)
   ;Si la lista de nodos ordenada por g está vacía, termina.
   (if (null lst-nodes)
@@ -659,7 +873,21 @@
         (append (list node) lst-nodes)
       ;Sino, sigue mirando en qué posición insertar el nodo de acuerdo al orden.
       (append (list (first lst-nodes)) (insert-node-strategy node (rest lst-nodes) strategy)))))
- 
+
+;;
+;; Función de coste uniforme
+;;
+(defun node-g-<= (node-1 node-2)
+  (<= (node-g node-1)
+      (node-g node-2)))
+
+;;
+;; Estrategia de coste uniforme
+;;
+(defparameter *uniform-cost*
+  (make-strategy
+   :name 'uniform-cost
+   :node-compare-p #'node-g-<=))
 
 ;;;
 ;;; EJEMPLOS
@@ -672,17 +900,6 @@
    (make-node :state 'Kentares :depth 2 :g 50 :f 50) )
 
 (defparameter lst-nodes-00 (expand-node node-00 *galaxy-M35*))
-
-;Función de coste uniforme
-(defun node-g-<= (node-1 node-2)
-  (<= (node-g node-1)
-      (node-g node-2)))
-
-;Estrategia de coste uniforme
-(defparameter *uniform-cost*
-  (make-strategy
-   :name 'uniform-cost
-   :node-compare-p #'node-g-<=))
 
 (print (insert-nodes-strategy (list node-00 node-01 node-02) 
                         lst-nodes-00 
@@ -806,35 +1023,69 @@
 ;;; 
 ;;;    BEGIN Exercise 8: Search algorithm
 ;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; A partir de un problema de búsqueda, busca la solución 
+;; óptima (camino más corto) desde el planeta de origen
+;; hasta el planeta de destino, siguiendo una estrategia
+;; definida.
+;;
+;;  Input:
+;;    problem: problema de búsqueda.
+;;    strategy: estrategia de búsqueda.
+;;
+;;  Returns:
+;;    Camino desde el nodo raíz hasta el nodo objetivo.
 (defun graph-search (problem strategy)
+  ;Inicializa el nodo raíz de la búsqueda,
+  ;la lista abierta y la lista cerrada.
   (let* ((initial-planet (problem-initial-state problem))	;Nombre del planeta inicial.
-		 (ng 0)												;Valor de g del nodo raíz.
-		 (nh (funcall (problem-f-h problem) initial-planet));Valor de h del nodo raíz.
-		 (root-node (make-node :state initial-planet		;Nodo raíz del problema con el planeta inicial.
+		   (ng 0)												         ;Valor de g del nodo raíz.
+		   (nh (funcall (problem-f-h problem) initial-planet));Valor de h del nodo raíz.
+		   (root-node (make-node :state initial-planet		   ;Nodo raíz del problema con el planeta inicial.
 							   :parent nil
 							   :action nil
 							   :depth 0
 							   :g ng
 							   :h nh
 							   :f (+ ng nh)))
-		(open-nodes (list root-node))						;Lista abierta con el nodo raíz.
+		  (open-nodes (list root-node))						;Lista abierta con el nodo raíz.
         (closed-nodes nil))									;Lista cerrada vacía.
 	(graph-search-rec open-nodes closed-nodes problem strategy)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; A partir de un problema de búsqueda, busca la solución 
+;; óptima (camino más corto), de forma recursiva, desde el planeta 
+;; de origen hasta el planeta de destino, siguiendo una estrategia
+;; definida.
+;;
+;;  Input:
+;;    open-nodes: lista abierta que contiene los nodos generados,
+;;                pero no expandidos.
+;;    closed-nodes: lista cerrada que contiene los nodos generados
+;;                  y expandidos previamente.
+;;    problem: problema de búsqueda.
+;;    strategy: estrategia de búsqueda.
+;;
+;;  Returns:
+;;    Camino desde el nodo raíz hasta el nodo objetivo.
 (defun graph-search-rec (open-nodes closed-nodes problem strategy)
   (if (null open-nodes)
     nil
     (let ((current-node (first open-nodes)))
-	    (if (f-goal-test-galaxy current-node *planets-destination* *planets-mandatory*) ;El nodo a expandir es el objetivo
-			;Evaluar a la solución.
+        ;Comprueba si el nodo a expandir es el objetivo.
+	    (if (f-goal-test-galaxy current-node *planets-destination* *planets-mandatory*)
+			;Si lo es, evalúa a la solución.
 			(first (get-solution current-node))
-			;Comprueba si el nodo no está en la lista cerrada o,
+			;En caso contrario, comprueba si el nodo no está en la lista cerrada o,
 			;si está en ella, si tiene un valor de g inferior al primer nodo de closed-nodes.
-			(if (or (null (member current-node closed-nodes))
+			;(if (or (null (member current-node closed-nodes))
+             (if (or (null (funcall (problem-f-search-state-equal problem) current-node (first closed-nodes)))
 					 (< (node-g current-node) (node-g (first closed-nodes))))
 				;Expande el nodo actual e inserta los hijos en open-nodes, ordenados de
 				;acuerdo al criterio de comparación de strategy.
-				;
 				;También inserta el nodo actual en la lista cerrada closed-nodes.
 				(let ((new-open-nodes (insert-nodes-strategy (expand-node current-node problem) open-nodes strategy))
 					  (new-closed-nodes (append (list current-node) closed-nodes)))
@@ -845,19 +1096,35 @@
 				;de la lista abierta.
 				(graph-search-rec (remove current-node open-nodes) closed-nodes problem strategy))))))
 		
-;Obtiene el camino desde el nodo objetivo hasta la raíz.				
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Obtiene el camino desde el nodo objetivo hasta la raíz.
+;;
+;;  Input:
+;;    node: nodo objetivo.
+;;
+;;  Returns:
+;;    Camino desde el nodo raíz hasta el nodo objetivo.			
 (defun get-solution (node)
   (if (null node)
 	nil
 	(append (list node) (get-solution (node-parent node)))))
 
-;
-;  Solve a problem using the A* strategy
-;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Resuelve un problema de búsqueda utilizando la estrategia A*.
+;;
+;;  Input:
+;;    problem: problema de búsqueda.
+;;
+;;  Returns:
+;;    Camino desde el nodo raíz hasta el nodo objetivo.
 (defun a-star-search (problem)
   (graph-search problem *A-star*))
 
-
+;;;
+;;; EJEMPLOS
+;;;
 (graph-search *galaxy-M35* *A-star*);->
 ;;;#S(NODE :STATE ...
 ;;;        :PARENT #S(NODE :STATE ...
@@ -881,13 +1148,31 @@
 ;;;    BEGIN Exercise 9: Solution path / action sequence
 ;;;
 
-;Obtiene una lista de estados (nombres de planetas) desde
-;la raíz hasta el nodo objetivo.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Obtiene una lista de estados (nombres de planetas) desde
+;; el nodo raíz hasta el nodo objetivo.
+;;
+;;  Input:
+;;    node: nodo objetivo.
+;;
+;;  Returns:
+;;    Lista de nombres que representa el camino desde 
+;;    el nodo raíz hasta el nodo objetivo.
 (defun solution-path (node)
   (reverse (get-solution-path node)))
 
-;Obtiene una lista de estados (nombres de planetas) desde
-;el nodo objetivo hasta la raíz.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Obtiene una lista de estados (nombres de planetas) desde
+;; el nodo objetivo hasta el nodo raíz.
+;;
+;;  Input:
+;;    node: nodo objetivo.
+;;
+;;  Returns:
+;;    Lista de nombres que representa el camino desde 
+;;    el nodo objetivo hasta el nodo raíz.
 (defun get-solution-path (node)
   (if (null node)
 	nil
@@ -899,13 +1184,29 @@
 (solution-path nil) ;;; -> NIL 
 (solution-path (a-star-search *galaxy-M35*))  ;;;-> (MALLORY ...)
 
-;Obtiene una lista de acciones desde
-;la raíz hasta el nodo objetivo.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Obtiene una lista de acciones desde el nodo raíz hasta el nodo objetivo.
+;;
+;;  Input:
+;;    node: nodo objetivo.
+;;
+;;  Returns:
+;;    Lista de nombres que representa las acciones desde 
+;;    el nodo raíz hasta el nodo objetivo.
 (defun action-sequence (node)
   (reverse (get-action-sequence node)))
 
-;Obtiene una lista de acciones desde
-;el nodo objetivo hasta la raíz.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Obtiene una lista de acciones desde el nodo objetivo hasta el nodo raíz.
+;;
+;;  Input:
+;;    node: nodo objetivo.
+;;
+;;  Returns:
+;;    Lista de nombres que representa las acciones desde 
+;;    el nodo objetivo hasta el nodo raíz.
 (defun get-action-sequence (node)
   (if (null node)
     nil
@@ -914,7 +1215,7 @@
 	  (cons (node-action node) (get-action-sequence (node-parent node))))))
 
 ;;;
-;;; EJEMPLOs
+;;; EJEMPLOS
 ;;;
 (action-sequence nil) ;;; -> NIL
 (action-sequence (a-star-search *galaxy-M35*)) ;;; -> (#S(ACTION :NAME ...)) 
@@ -930,16 +1231,22 @@
 ;;;    BEGIN Exercise 10: depth-first / breadth-first
 ;;;
 
+;;
+;; Función de búsqueda en anchura
+;;
+;; Comprueba si la profundidad de node-1 es 
+;; mayor o igual que la de node-2.
+;;
+(defun depth-first-node-compare-p (node-1 node-2)
+  (>= (node-depth node-1)
+      (node-depth node-2)))
+;;
+;; Estrategia de búsqueda en anchura
+;;
 (defparameter *depth-first*
   (make-strategy
    :name 'depth-first
    :node-compare-p #'depth-first-node-compare-p))
-
-;Comprueba si la profundidad de node-1 es 
-;mayor o igual que la de node-2.
-(defun depth-first-node-compare-p (node-1 node-2)
-  (>= (node-depth node-1)
-      (node-depth node-2)))
 
 ;;;
 ;;; EJEMPLOS
@@ -948,16 +1255,22 @@
 (action-sequence (graph-search *galaxy-M35* *depth-first*))
 ;;; -> (MALLORY ... )
 
+;;
+;; Función de búsqueda en profundidad
+;;
+;; Comprueba si la profundidad de node-1 es 
+;; menor o igual que la de node-2.
+;;
+(defun breadth-first-node-compare-p (node-1 node-2)
+  (<= (node-depth node-1)
+      (node-depth node-2)))
+;;
+;; Estrategia de búsqueda en profundidad
+;;
 (defparameter *breadth-first*
   (make-strategy
    :name 'breadth-first
    :node-compare-p #'breadth-first-node-compare-p))
-
-;Comprueba si la profundidad de node-1 es 
-;menor o igual que la de node-2.
-(defun breadth-first-node-compare-p (node-1 node-2)
-  (<= (node-depth node-1)
-      (node-depth node-2)))
 
 ;;;
 ;;; EJEMPLOS
