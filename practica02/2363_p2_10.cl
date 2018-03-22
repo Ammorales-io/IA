@@ -391,8 +391,8 @@
   ;los planetas obligatorios.
   (if (member (node-state node) planets-destination)
       ;(f-mandatory-test node planets-mandatory)
-       (f-mandatory-test (node-parent node) planets-mandatory) ;Comprueba si los nodos padre corresponden
-    nil))                                                      ;a planetas obligatorios visitados.
+      (f-mandatory-test (node-parent node) planets-mandatory) ;Comprueba si los nodos padre corresponden
+    nil))                                                     ;a planetas obligatorios visitados.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
@@ -454,7 +454,7 @@
 ;; 
 ;; Comprueba si dos nodos son iguales mediante estos criterios:
 ;;
-;;	 - Mismo estado de búsqueda (nombre de planeta), si no se
+;;  - Mismo estado de búsqueda (nombre de planeta), si no se
 ;;    especifican planetas obligatorios como parámetro.
 ;;  - Mismo estado de búsqueda y lista de planetas obligatorios
 ;;    por visitar, si se especifican planetas obligatorios.
@@ -467,22 +467,22 @@
 ;;  Returns:
 ;;    T si los nodos son iguales, NIL si no.
 (defun f-search-state-equal-galaxy (node-1 node-2 &optional planets-mandatory)
-	;Si alguno de los nodos pasados como parámetro es NIL,
-	;la función termina.
-    (if (or (null node-1) (null node-2))
-	  nil
-	  (let ((planet-1 (node-state node-1))
-		    (planet-2 (node-state node-2)))
-	    ;Si no se han especificado planetas obligatorios,
-	    ;se comprueba si el nombre de los planetas es igual.
-	    (if (null planets-mandatory)
-	      (equal planet-1 planet-2)
-	      ;En caso contrario, comprueba si el nombre de los planetas
-	      ;y la lista de planetas por visitar coinciden.
-	      (let ((planets-not-visited-node-1 (get-mandantory-planets-not-visited (node-parent node-1) planets-mandatory))
-			    (planets-not-visited-node-2 (get-mandantory-planets-not-visited (node-parent node-2) planets-mandatory)))
-			  (and (equal planet-1 planet-2)
-		           (equal planets-not-visited-node-1 planets-not-visited-node-2)))))))
+  ;Si alguno de los nodos pasados como parámetro es NIL,
+  ;la función termina.
+  (if (or (null node-1) (null node-2))
+      nil
+    (let ((planet-1 (node-state node-1))
+          (planet-2 (node-state node-2)))
+      ;Si no se han especificado planetas obligatorios,
+      ;se comprueba si el nombre de los planetas es igual.
+      (if (null planets-mandatory)
+          (equal planet-1 planet-2)
+        ;En caso contrario, comprueba si el nombre de los planetas
+        ;y la lista de planetas por visitar coinciden.
+        (let ((planets-not-visited-node-1 (get-mandantory-planets-not-visited (node-parent node-1) planets-mandatory))
+              (planets-not-visited-node-2 (get-mandantory-planets-not-visited (node-parent node-2) planets-mandatory)))
+          (and (equal planet-1 planet-2)
+               (equal planets-not-visited-node-1 planets-not-visited-node-2)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
@@ -499,12 +499,12 @@
   ;Si llegamos al nodo raíz, devolvemos
   ;la lista de planetas que quedan por visitar.
   (if (null node)
-    planets-mandatory
+      planets-mandatory
     ;Si aún no hemos llegado al nodo raíz, comprueba si el nodo actual
     ;es un planeta obligatorio.
     (if (member (node-state node) planets-mandatory :test #'equal)
-      ;Si es un planeta obligatorio, lo elimina de la lista y pasa a comprobar el nodo padre.
-      (get-mandantory-planets-not-visited (node-parent node) (remove (node-state node) planets-mandatory))
+        ;Si es un planeta obligatorio, lo elimina de la lista y pasa a comprobar el nodo padre.
+        (get-mandantory-planets-not-visited (node-parent node) (remove (node-state node) planets-mandatory))
       ;Si no es obligatorio, pasa a comprobar el nodo padre directamente.
       (get-mandantory-planets-not-visited (node-parent node) planets-mandatory))))
 
@@ -540,7 +540,7 @@
    :initial-state     *planet-origin*
    :f-goal-test       #'(lambda (node) 
                           (f-goal-test-galaxy node *planets-destination*
-                                                   *planets-mandatory*))
+                                              *planets-mandatory*))
    :f-h               #'(lambda (state)
                           (f-h-galaxy state *sensors*))
    :f-search-state-equal #'(lambda (node-1 node-2) 
@@ -619,17 +619,17 @@
     ;Crea una lista de nodos a partir de la información
     ;de cada acción.
     (cons (let* ((nstate (action-final (first a-list)))
-                ;(ng (action-cost (first a-list)))
-				(ng (+ (action-cost (first a-list)) (node-g parent-node))) ;Coste desde la raíz hasta el nodo actual.
-                (nh (funcall (problem-f-h problem) nstate)))
-           (make-node 
-            :state nstate
-            :parent parent-node
-            :action (first a-list)
-            :depth (+ 1 (node-depth parent-node))
-            :g ng
-            :h nh
-            :f (+ ng nh)))
+                 ;(ng (action-cost (first a-list)))
+                 (ng (+ (action-cost (first a-list)) (node-g parent-node))) ;Coste desde la raíz hasta el nodo actual.
+                 (nh (funcall (problem-f-h problem) nstate)))
+            (make-node 
+             :state nstate
+             :parent parent-node
+             :action (first a-list)
+             :depth (+ 1 (node-depth parent-node))
+             :g ng
+             :h nh
+             :f (+ ng nh)))
           (create-node-list-from-action-list (rest a-list) parent-node problem))))
            
 ;;;
@@ -869,7 +869,7 @@
     (if (funcall (strategy-node-compare-p strategy) 
                  node 
                  (first lst-nodes))
-	    ;Node pasa a ser el primer elemento de la lista ordenada.
+        ;Node pasa a ser el primer elemento de la lista ordenada.
         (append (list node) lst-nodes)
       ;Sino, sigue mirando en qué posición insertar el nodo de acuerdo al orden.
       (append (list (first lst-nodes)) (insert-node-strategy node (rest lst-nodes) strategy)))))
@@ -893,17 +893,17 @@
 ;;; EJEMPLOS
 ;;;
 (defparameter node-00
-   (make-node :state 'Proserpina :depth 12 :g 10 :f 20) )
+  (make-node :state 'Proserpina :depth 12 :g 10 :f 20) )
 (defparameter node-01
-   (make-node :state 'Avalon :depth 0 :g 0 :f 0) )
+  (make-node :state 'Avalon :depth 0 :g 0 :f 0) )
 (defparameter node-02
-   (make-node :state 'Kentares :depth 2 :g 50 :f 50) )
+  (make-node :state 'Kentares :depth 2 :g 50 :f 50) )
 
 (defparameter lst-nodes-00 (expand-node node-00 *galaxy-M35*))
 
 (print (insert-nodes-strategy (list node-00 node-01 node-02) 
-                        lst-nodes-00 
-                        *uniform-cost*));->
+                              lst-nodes-00 
+                              *uniform-cost*));->
 ;;;
 ;;;(#S(NODE :STATE AVALON 
 ;;;         :PARENT NIL 
@@ -1040,19 +1040,19 @@
 (defun graph-search (problem strategy)
   ;Inicializa el nodo raíz de la búsqueda,
   ;la lista abierta y la lista cerrada.
-  (let* ((initial-planet (problem-initial-state problem))	;Nombre del planeta inicial.
-		   (ng 0)												         ;Valor de g del nodo raíz.
-		   (nh (funcall (problem-f-h problem) initial-planet));Valor de h del nodo raíz.
-		   (root-node (make-node :state initial-planet		   ;Nodo raíz del problema con el planeta inicial.
-							   :parent nil
-							   :action nil
-							   :depth 0
-							   :g ng
-							   :h nh
-							   :f (+ ng nh)))
-		  (open-nodes (list root-node))						;Lista abierta con el nodo raíz.
-        (closed-nodes nil))									;Lista cerrada vacía.
-	(graph-search-rec open-nodes closed-nodes problem strategy)))
+  (let* ((initial-planet (problem-initial-state problem))    ;Nombre del planeta inicial.
+         (ng 0)                                              ;Valor de g del nodo raíz.
+         (nh (funcall (problem-f-h problem) initial-planet)) ;Valor de h del nodo raíz.
+         (root-node (make-node :state initial-planet         ;Nodo raíz del problema con el planeta inicial.
+                               :parent nil
+                               :action nil
+                               :depth 0
+                               :g ng
+                               :h nh
+                               :f (+ ng nh)))
+         (open-nodes (list root-node))                       ;Lista abierta con el nodo raíz.
+         (closed-nodes nil))                                 ;Lista cerrada vacía.
+    (graph-search-rec open-nodes closed-nodes problem strategy)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
@@ -1073,28 +1073,28 @@
 ;;    Camino desde el nodo raíz hasta el nodo objetivo.
 (defun graph-search-rec (open-nodes closed-nodes problem strategy)
   (if (null open-nodes)
-    nil
+      nil
     (let ((current-node (first open-nodes)))
-        ;Comprueba si el nodo a expandir es el objetivo.
-	    (if (f-goal-test-galaxy current-node *planets-destination* *planets-mandatory*)
-			;Si lo es, evalúa a la solución.
-			(first (get-solution current-node))
-			;En caso contrario, comprueba si el nodo no está en la lista cerrada o,
-			;si está en ella, si tiene un valor de g inferior al primer nodo de closed-nodes.
-			;(if (or (null (member current-node closed-nodes))
-             (if (or (null (funcall (problem-f-search-state-equal problem) current-node (first closed-nodes)))
-					 (< (node-g current-node) (node-g (first closed-nodes))))
-				;Expande el nodo actual e inserta los hijos en open-nodes, ordenados de
-				;acuerdo al criterio de comparación de strategy.
-				;También inserta el nodo actual en la lista cerrada closed-nodes.
-				(let ((new-open-nodes (insert-nodes-strategy (expand-node current-node problem) open-nodes strategy))
-					  (new-closed-nodes (append (list current-node) closed-nodes)))
-					;Continúa la búsqueda eliminando el nodo expandido actual
-					;de la lista abierta.
-					(graph-search-rec (remove current-node new-open-nodes) new-closed-nodes problem strategy))
-				;Si el nodo a expandir no cumple las condiciones, se elimina directamente
-				;de la lista abierta.
-				(graph-search-rec (remove current-node open-nodes) closed-nodes problem strategy))))))
+      ;Comprueba si el nodo a expandir es el objetivo.
+      (if (f-goal-test-galaxy current-node *planets-destination* *planets-mandatory*)
+          ;Si lo es, evalúa a la solución.
+          (first (get-solution current-node))
+        ;En caso contrario, comprueba si el nodo no está en la lista cerrada o,
+        ;si está en ella, si tiene un valor de g inferior al primer nodo de closed-nodes.
+        ;(if (or (null (member current-node closed-nodes))
+        (if (or (null (funcall (problem-f-search-state-equal problem) current-node (first closed-nodes)))
+                (< (node-g current-node) (node-g (first closed-nodes))))
+            ;Expande el nodo actual e inserta los hijos en open-nodes, ordenados de
+            ;acuerdo al criterio de comparación de strategy.
+            ;También inserta el nodo actual en la lista cerrada closed-nodes.
+            (let ((new-open-nodes (insert-nodes-strategy (expand-node current-node problem) open-nodes strategy))
+                  (new-closed-nodes (append (list current-node) closed-nodes)))
+              ;Continúa la búsqueda eliminando el nodo expandido actual
+              ;de la lista abierta.
+              (graph-search-rec (remove current-node new-open-nodes) new-closed-nodes problem strategy))
+          ;Si el nodo a expandir no cumple las condiciones, se elimina directamente
+          ;de la lista abierta.
+          (graph-search-rec (remove current-node open-nodes) closed-nodes problem strategy))))))
 		
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
@@ -1107,8 +1107,8 @@
 ;;    Camino desde el nodo raíz hasta el nodo objetivo.			
 (defun get-solution (node)
   (if (null node)
-	nil
-	(append (list node) (get-solution (node-parent node)))))
+      nil
+    (append (list node) (get-solution (node-parent node)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
@@ -1175,8 +1175,8 @@
 ;;    el nodo objetivo hasta el nodo raíz.
 (defun get-solution-path (node)
   (if (null node)
-	nil
-	(cons (node-state node) (get-solution-path (node-parent node)))))
+      nil
+    (cons (node-state node) (get-solution-path (node-parent node)))))
 
 ;;;
 ;;; EJEMPLOS
@@ -1209,10 +1209,10 @@
 ;;    el nodo objetivo hasta el nodo raíz.
 (defun get-action-sequence (node)
   (if (null node)
-    nil
+      nil
     (if (null (node-parent node))
-	  (node-action node)
-	  (cons (node-action node) (get-action-sequence (node-parent node))))))
+        (node-action node)
+      (cons (node-action node) (get-action-sequence (node-parent node))))))
 
 ;;;
 ;;; EJEMPLOS
