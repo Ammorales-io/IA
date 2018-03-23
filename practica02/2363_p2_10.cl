@@ -172,132 +172,18 @@
       ;Sino, avanza en la lista asociativa hole-map.
       (make-colindant-list state (rest hole-map)))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
-;; Elimina los planetas prohibidos de una lista de tripletes
-;; que tienen como origen un planeta y como destino los
-;; planetas directamente accesibles desde el origen.
-;;
-;;  Input:
-;;    colindant-map: lista de tripletes descrita anteriormente.
-;;    planets-forbidden: lista de nombres de planetas prohibidos.
-;;
-;;  Returns:
-;;    Lista de tripletes de tipo (<state> <planeta-destino> <coste>),
-;;    sin planetas prohibidos como <planeta-destino>.
-(defun filter-forbidden-planets (colindant-map planets-forbidden)
-  ;Si hemos llegado al final de la lista
-  ;de planetas prohibidos o no hay planetas
-  ;prohibidos, la función devuelve el mapa resultante.
-  (if (null planets-forbidden)
-      colindant-map
-    (let ((bad-planet (first planets-forbidden)))
-      ;En caso contrario comprueba si, por cada triplete, existe al 
-      ;menos uno que tiene como segundo elemento (es decir, como destino) un planeta prohibido.
-      (if (> (count bad-planet colindant-map :test #'equal :key #'second) 0)
-          ;Si se cumple la condición, elimina todos tripletes que
-          ;contengan un planeta prohibido como destino.
-          (filter-forbidden-planets
-           (remove bad-planet colindant-map :key #'second) (rest planets-forbidden))
-        ;Si no, deja la lista de tripletes como está y busca más
-        ;planetas prohibidos para filtrar.
-        (filter-forbidden-planets colindant-map (rest planets-forbidden))))))
+;; cOMENTÁ
+(defun navigate (state hole-map forbidden action-name)
+  (mapcan #'(lambda (dest)
+              (if (member (second dest) forbidden)
+                  nil
+                (list (make-action
+                       :name action-name
+                       :origin state
+                       :final (second dest)
+                       :cost (third dest))))) 
+              (make-colindant-list state hole-map)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
-;; A partir de una lista de tripletes que representa un conjunto de
-;; agujeros negros o blancos, devuelve una lista de tripletes
-;; con los planetas a los que se puede acceder a partir del planeta
-;; de origen.
-;;
-;;  Input:
-;;    state: estado de búsqueda que representa al planeta de origen.
-;;    hole-map: lista de tripletes correspondiente a los grafos
-;;              de la galaxia (en este caso, agujeros blancos
-;;              o de gusano).
-;;    planets-forbidden: lista de nombres de planetas prohibidos.
-;;
-;;  Returns:
-;;    Lista de tripletes de tipo (<state> <planeta-destino> <coste>),
-;;    sin planetas prohibidos como <planeta-destino>.
-(defun allowed-planets (state hole-map planets-forbidden)
-  (let ((colindant-map (make-colindant-list state hole-map)))
-    ;Filtra los planetas prohibidos de la lista de tripletes
-    ;donde cada triplete tiene a state como origen.
-    (filter-forbidden-planets colindant-map planets-forbidden)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
-;; Crea una lista de acciones a partir de una lista de tripletes. 
-;; Esta lista de tripletes contiene todos los viajes que se pueden hacer
-;; desde el planeta origen hasta los sucesores.
-;;
-;; Los planetas prohibidos han sido filtrados de la lista previamente
-;; por la función allowed-planets.
-;;
-;;  Input:
-;;    hole-map: lista de tripletes correspondiente a los grafos
-;;              de la galaxia (en este caso, agujeros blancos
-;;              o de gusano).
-;;    hole-type: tipo de agujero (en este caso, blanco o de gusano)
-;;
-;;  Returns:
-;;    Lista de acciones del planeta de origen al de destino, a
-;;    través del agujero correspondiente.
-(defun make-action-list (hole-map hole-type)
-  ;Si hemos llegado al final de la lista de tripletes,
-  ;la función termina.
-  (if (null hole-map)
-      nil
-    (let ((triplet (first hole-map)))
-      ;Si el grafo corresponde a uno con agujeros blancos,
-      ;crea una lista de acciones permitidas en este grafo.
-      (if (equal hole-type "white")
-          (cons
-           (make-action :name 'navigate-white-hole :origin (first triplet) :final (second triplet) :cost (third triplet))
-           (make-action-list (rest hole-map) hole-type))
-        ;Si el grafo corresponde a uno con agujeros de gusano,
-        ;crea una lista de acciones permitidas en este grafo.
-        (cons
-         (make-action :name 'navigate-worm-hole :origin (first triplet) :final (second triplet) :cost (third triplet))
-         (make-action-list (rest hole-map) hole-type))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
-;; Obtiene todas las acciones que se pueden realizar desde
-;; el planeta de origen hasta sus sucesores inmediatos,
-;; diferenciando entre agujeros blancos y de gusano.
-;;
-;; Los planetas prohibidos han sido filtrados de la lista previamente
-;; por la función allowed-planets.
-;;
-;;  Input:
-;;    state: estado de búsqueda que representa al planeta de origen.
-;;    hole-map: lista de tripletes correspondiente a los grafos
-;;              de la galaxia (en este caso, agujeros blancos
-;;              o de gusano).
-;;    hole-type: tipo de agujero (en este caso, blanco o de gusano)
-;;
-;;  Returns:
-;;    Lista de acciones del planeta de origen al de destino, a
-;;    través del agujero correspondiente.
-(defun navigate (state hole-map planets-forbidden)
-  (cond
-   ;CASO 1: El planeta no pertenece a la lista de planetas.
-   ((null (member state *planets* :test #'equal))
-    nil)
-   ;CASO 2: El grafo tiene agujeros blancos.
-   ;Se crea una lista de acciones permitidas para el planeta
-   ;origen state en dicho grafo.
-   ((equal hole-map *white-holes*)
-    (make-action-list (allowed-planets state hole-map planets-forbidden) "white"))
-   ;CASO 3: El grafo tiene agujeros de gusano.
-   ;Se crea una lista de acciones permitidas para el planeta
-   ;origen state en dicho grafo.
-   ((equal hole-map *worm-holes*)
-    (make-action-list (allowed-planets state hole-map planets-forbidden) "worm"))
-   (t NIL)))
-	 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
 ;; Operador que devuelve una lista de acciones que se
@@ -313,7 +199,7 @@
 ;;    Lista de acciones del planeta de origen al de destino, a
 ;;    través de los agujeros blancos.
 (defun navigate-white-hole (state white-holes)
-  (navigate state white-holes nil))
+  (navigate state white-holes nil 'navigate-white-hole))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
@@ -330,19 +216,8 @@
 ;;    Lista de acciones del planeta de origen al de destino, a
 ;;    través de los agujeros de gusano.
 (defun navigate-worm-hole (state worm-holes planets-forbidden)
-  (navigate state worm-holes planets-forbidden))
+  (navigate state worm-holes planets-forbidden 'navigate-worm-hole))
 
-
-;(defun navigate-white-hole (state white-holes)
-  ;(navigate (make-colindant-list state white-holes)))
-
-;(defun navigate-worm-hole (state worm-holes planets-forbidden)
-  ;(navigate (member (first planets-forbidden 
-                     ;(make-colindant-list state worm-holes) 
-                     ;:test-not #'equal
-                     ;:key #'second))))
-;; Habría que hacer que comprobase, creo, cada uno de los elementos del planets-forbidden, 
-;; por eso hay un union. ¿Quizás re-implementar 1.3.3? 
 
 ;;;
 ;;; EJEMPLOS
@@ -396,6 +271,30 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
+;; Devuelve una lista de planetas obligatorios aún no visitados.
+;;
+;;  Input:
+;;    node: nodo que representa un estado de búsqueda (el planeta actual).
+;;    planets-mandatory: lista de nombres de los planetas obligatorios.
+;;
+;;  Returns:
+;;    Lista con los nombres de los planetas obligatorios que aún 
+;;    queden por visitar, o NIL si se han visitado todos.
+(defun get-mandatory-planets-not-visited (node planets-mandatory)
+  ;Si llegamos al nodo raíz, devolvemos
+  ;la lista de planetas que quedan por visitar.
+  (if (null node)
+      planets-mandatory
+    ;Si aún no hemos llegado al nodo raíz, comprueba si el nodo actual
+    ;es un planeta obligatorio.
+    (if (member (node-state node) planets-mandatory :test #'equal)
+        ;Si es un planeta obligatorio, lo elimina de la lista y pasa a comprobar el nodo padre.
+        (get-mandatory-planets-not-visited (node-parent node) (remove (node-state node) planets-mandatory))
+      ;Si no es obligatorio, pasa a comprobar el nodo padre directamente.
+      (get-mandatory-planets-not-visited (node-parent node) planets-mandatory))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
 ;; Comprueba si en el camino del nodo raíz al nodo actual
 ;; se ha pasado por los planetas obligatorios.
 ;;
@@ -406,20 +305,11 @@
 ;;  Returns:
 ;;    T si se ha pasado por todos los nodos obligatorios, NIL si no.
 (defun f-mandatory-test (node planets-mandatory)
-  ;Si hemos llegado al nodo raíz...
-  (if (null node)
-      ;Y la lista de planetas obligatorios está vacía,
-      ;hemos pasado por todos los planetas obligatorios.
-      (if (null planets-mandatory)
-          T
-        nil)
-    ;Si aún no hemos llegado al nodo raíz, comprueba si el nodo actual
-    ;es un planeta obligatorio.
-    (if (member (node-state node) planets-mandatory)
-        ;Si lo es, elimina el nodo de la lista de planetas obligatorios.
-        (f-mandatory-test (node-parent node) (remove (node-state node) planets-mandatory))
-      ;Sino, comprueba si el nodo padre es obligatorio.
-      (f-mandatory-test (node-parent node) planets-mandatory))))
+  ;Y la lista de planetas obligatorios está vacía,
+  ;hemos pasado por todos los planetas obligatorios.
+  (if (null (get-mandatory-planets-not-visited node planets-mandatory))
+      T
+    nil))
 
 ;;;
 ;;; EJEMPLOS
@@ -479,34 +369,12 @@
           (equal planet-1 planet-2)
         ;En caso contrario, comprueba si el nombre de los planetas
         ;y la lista de planetas por visitar coinciden.
-        (let ((planets-not-visited-node-1 (get-mandantory-planets-not-visited (node-parent node-1) planets-mandatory))
-              (planets-not-visited-node-2 (get-mandantory-planets-not-visited (node-parent node-2) planets-mandatory)))
+        (let ((planets-not-visited-node-1 (get-mandatory-planets-not-visited (node-parent node-1) planets-mandatory))
+              (planets-not-visited-node-2 (get-mandatory-planets-not-visited (node-parent node-2) planets-mandatory)))
           (and (equal planet-1 planet-2)
                (equal planets-not-visited-node-1 planets-not-visited-node-2)))))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
-;; Devuelve una lista de planetas obligatorios aún no visitados.
-;;
-;;  Input:
-;;    node: nodo que representa un estado de búsqueda (el planeta actual).
-;;    planets-mandatory: lista de nombres de los planetas obligatorios.
-;;
-;;  Returns:
-;;    Lista con los nombres de los planetas obligatorios que aún 
-;;    queden por visitar, o NIL si se han visitado todos.
-(defun get-mandantory-planets-not-visited (node planets-mandatory)
-  ;Si llegamos al nodo raíz, devolvemos
-  ;la lista de planetas que quedan por visitar.
-  (if (null node)
-      planets-mandatory
-    ;Si aún no hemos llegado al nodo raíz, comprueba si el nodo actual
-    ;es un planeta obligatorio.
-    (if (member (node-state node) planets-mandatory :test #'equal)
-        ;Si es un planeta obligatorio, lo elimina de la lista y pasa a comprobar el nodo padre.
-        (get-mandantory-planets-not-visited (node-parent node) (remove (node-state node) planets-mandatory))
-      ;Si no es obligatorio, pasa a comprobar el nodo padre directamente.
-      (get-mandantory-planets-not-visited (node-parent node) planets-mandatory))))
+
 
 ;;;
 ;;; EJEMPLOS
@@ -870,9 +738,9 @@
                  node 
                  (first lst-nodes))
         ;Node pasa a ser el primer elemento de la lista ordenada.
-        (append (list node) lst-nodes)
+        (cons node lst-nodes)
       ;Sino, sigue mirando en qué posición insertar el nodo de acuerdo al orden.
-      (append (list (first lst-nodes)) (insert-node-strategy node (rest lst-nodes) strategy)))))
+      (cons (first lst-nodes) (insert-node-strategy node (rest lst-nodes) strategy)))))
 
 ;;
 ;; Función de coste uniforme
@@ -1284,115 +1152,3 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-;;;---------------------------------------------------------------------
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
-;;    BATERÍA DE EJEMPLOS 
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
-;;    1. Galaxia KW-426
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defparameter *planets* '(Trevaris Tantalak Limium Rilooid Nudjor))
-
-(defparameter *white-holes*  
-  '((Trevaris Tantalak 2) (Trevaris Limium 7)
-    (Tantalak Trevaris 2) (Tantalak Limium 5.1) (Tantalak Rilooid 3)
-    (Limium Tantalak 5.1) (Limium Nudjor 10)
-    (Rilooid Limium 8)
-    (Nudjor Limium 10)))
-
-(defparameter *worm-holes*  
-  '((Trevaris Tantalak 1) (Trevaris Limium 9)
-    (Tantalak Trevaris 1) (Tantalak Limium 1)
-    (Limium Trevaris 9) (Limium Tantalak 1) (Limium Rilooid 6) (Limium Nudjor 12)
-    (Rilooid Limium 6) (Rilooid Nudjor 5)
-    (Nudjor Limium 12) (Nudjor Rilooid 5)))
- 
-(defparameter *sensors* 
-  '((Trevaris 10) (Tantalak 7) (Limium 9) (Rilooid 5) (Nudjor 0)))
-
-(defparameter *planet-origin* 'Tantalak)
-(defparameter *planets-destination* '(Nudjor))
-(defparameter *planets-forbidden*   nil)
-(defparameter *planets-mandatory*   '(Limium))
-
-(defparameter *galaxy-KW-426* 
-  (make-problem 
-   :states            *planets*          
-   :initial-state     *planet-origin*
-   :f-goal-test       #'(lambda (node) 
-                          (f-goal-test-galaxy node *planets-destination*
-                                              *planets-mandatory*))
-   :f-h               #'(lambda (state)
-                          (f-h-galaxy state *sensors*))
-   :f-search-state-equal #'(lambda (node-1 node-2) 
-                             (f-search-state-equal-galaxy node-1 node-2))
-   :operators         (list #'(lambda (node)
-                                (navigate-white-hole (node-state node) *white-holes*))
-                            #'(lambda (node)
-                                (navigate-worm-hole (node-state node) *worm-holes* *planets-forbidden*)))))
-
-;;;
-;;; EJEMPLOS
-;;;
-
-;;;
-;;; Ejercicio 1
-;;;
-(f-h-galaxy 'Tantalak *sensors*) ;-> 7
-(f-h-galaxy 'Rilooid *sensors*) ;-> 5
-(f-h-galaxy 'Uranus *sensors*) ;-> NIl
-
-;;;
-;;; Ejercicio 2
-;;;
-(navigate-worm-hole 'Trevaris *worm-holes* *planets-forbidden*)  ;->
-;;; (#S(ACTION :NAME NAVIGATE-WORM-HOLE :ORIGIN TREVARIS :FINAL TANTALAK :COST 1)
-;;;  #S(ACTION :NAME NAVIGATE-WORM-HOLE :ORIGIN TREVARIS :FINAL LIMIUM :COST 9))
-(navigate-white-hole 'Tantalak *white-holes*) ;->
-;;; (#S(ACTION :NAME NAVIGATE-WHITE-HOLE :ORIGIN TANTALAK :FINAL TREVARIS :COST 2)
-;;;  #S(ACTION :NAME NAVIGATE-WHITE-HOLE :ORIGIN TANTALAK :FINAL LIMIUM :COST 5.1)
-;;;  #S(ACTION :NAME NAVIGATE-WHITE-HOLE :ORIGIN TANTALAK :FINAL RILOOID :COST 3))
-
-;;;
-;;; Ejercicio 3A
-;;;
-(defparameter node-01
-   (make-node :state 'Tantalak))
-(defparameter node-02
-   (make-node :state 'Limium :parent node-01))
-(defparameter node-03
-   (make-node :state 'Rilooid :parent node-02))
-(defparameter node-04
-   (make-node :state 'Tantalak :parent node-03))
-(defparameter node-05
-   (make-node :state 'Nudjor :parent node-04))
-
-(f-goal-test-galaxy node-01 '(Nudjor Uranus) '(Limium Rilooid)); -> NIL
-(f-goal-test-galaxy node-02 '(Nudjor Uranus) '(Limium Rilooid)); -> NIL
-(f-goal-test-galaxy node-03 '(Nudjor Uranus) '(Limium Rilooid)); -> NIL
-(f-goal-test-galaxy node-04 '(Nudjor Uranus) '(Limium Rilooid)); -> NIL
-(f-goal-test-galaxy node-05 '(Nudjor Uranus) '(Limium Rilooid)); -> T
-
-;;;
-;;; Ejercicio 3B
-;;;
-
-;;; Under construction
-(f-search-state-equal-galaxy node-01 node-01) ;-> T
-(f-search-state-equal-galaxy node-01 node-02) ;-> NIL
-(f-search-state-equal-galaxy node-02 node-04) ;-> T
-
-(f-search-state-equal-galaxy node-01 node-01 '(Avalon)) ;-> T
-(f-search-state-equal-galaxy node-01 node-02 '(Avalon)) ;-> NIL
-(f-search-state-equal-galaxy node-02 node-04 '(Avalon)) ;-> T
-
-(f-search-state-equal-galaxy node-01 node-01 '(Avalon Katril)) ;-> T
-(f-search-state-equal-galaxy node-01 node-02 '(Avalon Katril)) ;-> NIL
-(f-search-state-equal-galaxy node-02 node-04 '(Avalon Katril)) ;-> NIL
