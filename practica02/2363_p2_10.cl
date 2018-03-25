@@ -163,7 +163,7 @@
   ;asociativa, la función termina.
   (if (null hole-map)
       nil
-    ;Sino, comprueba si el planeta de origen (state)
+    ;Si no, comprueba si el planeta de origen (state)
     ;coincide con el planeta de origen del primer triplete.
     (if (equal state (first (first hole-map)))
         ;Si coincide, crea una lista de tripletes.
@@ -172,8 +172,23 @@
       ;Sino, avanza en la lista asociativa hole-map.
       (make-colindant-list state (rest hole-map)))))
 
-;; cOMENTÁ
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Operador genérico que devuelve una lista de acciones que se
+;; pueden hacer a partir del estado state, sobre un
+;; grafo cualquiera, con posibildad de exclusión.
+;;
+;;  Input:
+;;    state: estado de búsqueda que representa al planeta de origen.
+;;    hole-map: lista de tripletes correspondiente al grafo cualquiera.
+;;    forbidden: planetas que no permitir como destino. De no haberlos, debe ser nil
+;;    action-name: nombre que asignar a la acción.
+;;
+;;  Returns:
+;;    Lista de acciones de la acción definida del planeta de origen al de destino.
 (defun navigate (state hole-map forbidden action-name)
+  ;Genera una lista de acciones con los resultados de
+  ;la función 'make-colindant-list' no presentes en forbidden.
   (mapcan #'(lambda (dest)
               (if (member (second dest) forbidden)
                   nil
