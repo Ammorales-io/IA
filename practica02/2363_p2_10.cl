@@ -924,18 +924,16 @@
   ;Inicializa el nodo raíz de la búsqueda,
   ;la lista abierta y la lista cerrada.
   (let* ((initial-planet (problem-initial-state problem))    ;Nombre del planeta inicial.
-         (ng 0)                                              ;Valor de g del nodo raíz.
-         (nh (funcall (problem-f-h problem) initial-planet)) ;Valor de h del nodo raíz.
-         (root-node (make-node :state initial-planet         ;Nodo raíz del problema con el planeta inicial.
-                               :parent nil
-                               :action nil
-                               :depth 0
-                               :g ng
-                               :h nh
-                               :f (+ ng nh)))
-         (open-nodes (list root-node))                       ;Lista abierta con el nodo raíz.
-         (closed-nodes nil))                                 ;Lista cerrada vacía.
-    (graph-search-rec open-nodes closed-nodes problem strategy)))
+         (nh (funcall (problem-f-h problem) initial-planet)));Valor de h del nodo raíz.
+    (graph-search-rec 
+     (list (make-node :state initial-planet         ;Nodo raíz del problema con el planeta inicial.
+                      :parent nil
+                      :action nil
+                      :depth 0
+                      :g 0
+                      :h nh
+                      :f (+ 0 nh)))
+     nil problem strategy)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
@@ -960,13 +958,12 @@
     (let ((current-node (first open-nodes)))
       ;Comprueba si el nodo a expandir es el objetivo.
       (if (f-goal-test-galaxy current-node *planets-destination* *planets-mandatory*)
-          ;Si lo es, evalúa a la solución.
-          (first (get-solution current-node))
+          ;Si lo es, lo devuelve como solución.
+          current-node
         ;En caso contrario, comprueba si el nodo no está en la lista cerrada o,
         ;si está en ella, si tiene un valor de g inferior al primer nodo de closed-nodes.
         ;(if (or (null (member current-node closed-nodes))
-        (if (or (null (funcall (problem-f-search-state-equal problem) current-node (first closed-nodes)))
-                (< (node-g current-node) (node-g (first closed-nodes))))
+        (if (envy current-node closed-nodes)
             ;Expande el nodo actual e inserta los hijos en open-nodes, ordenados de
             ;acuerdo al criterio de comparación de strategy.
             ;También inserta el nodo actual en la lista cerrada closed-nodes.
@@ -981,17 +978,22 @@
 		
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
-;; Obtiene el camino desde el nodo objetivo hasta la raíz.
+;; Función si comprueba si existe una instancia de un nodo en una
+;; lista dada de mayor g
 ;;
 ;;  Input:
-;;    node: nodo objetivo.
+;;    node: nodo cuya presencia y g comprobar.
+;;    node-list: lista de nodos donde comprobar la presencia y el g.
 ;;
 ;;  Returns:
-;;    Camino desde el nodo raíz hasta el nodo objetivo.			
-(defun get-solution (node)
-  (if (null node)
-      nil
-    (append (list node) (get-solution (node-parent node)))))
+;;    T o nil, según se cumpla la condición o no. 		
+(defun envy (node node-list)
+  (if (null node-list)
+      T
+    (if (and (f-search-state-equal-galaxy node (first node-list) *planets-mandatory*)
+         (> (node-g node) (node-g (first node-list))))
+        nil
+      (envy node (rest node-list)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
@@ -1115,16 +1117,15 @@
 ;;;
 
 ;;
-;; Función de búsqueda en anchura
+;; Función de búsqueda en profundidad
 ;;
 ;; Comprueba si la profundidad de node-1 es 
 ;; mayor o igual que la de node-2.
 ;;
 (defun depth-first-node-compare-p (node-1 node-2)
-  (>= (node-depth node-1)
-      (node-depth node-2)))
+  t)
 ;;
-;; Estrategia de búsqueda en anchura
+;; Estrategia de búsqueda en profundidad
 ;;
 (defparameter *depth-first*
   (make-strategy
@@ -1139,16 +1140,15 @@
 ;;; -> (MALLORY ... )
 
 ;;
-;; Función de búsqueda en profundidad
+;; Función de búsqueda en anchura
 ;;
 ;; Comprueba si la profundidad de node-1 es 
 ;; menor o igual que la de node-2.
 ;;
 (defun breadth-first-node-compare-p (node-1 node-2)
-  (<= (node-depth node-1)
-      (node-depth node-2)))
+  nil)
 ;;
-;; Estrategia de búsqueda en profundidad
+;; Estrategia de búsqueda en anchura
 ;;
 (defparameter *breadth-first*
   (make-strategy
