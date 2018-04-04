@@ -390,7 +390,6 @@
                (equal planets-not-visited-node-1 planets-not-visited-node-2)))))))
 
 
-
 ;;;
 ;;; EJEMPLOS
 ;;;
@@ -963,7 +962,7 @@
         ;En caso contrario, comprueba si el nodo no está en la lista cerrada o,
         ;si está en ella, si tiene un valor de g inferior al primer nodo de closed-nodes.
         ;(if (or (null (member current-node closed-nodes))
-        (if (envy current-node closed-nodes)
+        (if (not-in-closed-nodes current-node closed-nodes)
             ;Expande el nodo actual e inserta los hijos en open-nodes, ordenados de
             ;acuerdo al criterio de comparación de strategy.
             ;También inserta el nodo actual en la lista cerrada closed-nodes.
@@ -978,8 +977,8 @@
 		
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
-;; Función si comprueba si existe una instancia de un nodo en una
-;; lista dada de mayor g
+;; Función que comprueba si el nodo no está en la lista cerrada,
+;; o si está, que su valor de g sea menor que el nodo homólogo.
 ;;
 ;;  Input:
 ;;    node: nodo cuya presencia y g comprobar.
@@ -987,13 +986,13 @@
 ;;
 ;;  Returns:
 ;;    T o nil, según se cumpla la condición o no. 		
-(defun envy (node node-list)
+(defun not-in-closed-nodes (node node-list)
   (if (null node-list)
       T
     (if (and (f-search-state-equal-galaxy node (first node-list) *planets-mandatory*)
          (> (node-g node) (node-g (first node-list))))
         nil
-      (envy node (rest node-list)))))
+      (not-in-closed-nodes node (rest node-list)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
