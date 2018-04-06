@@ -961,7 +961,6 @@
           current-node
         ;En caso contrario, comprueba si el nodo no está en la lista cerrada o,
         ;si está en ella, si tiene un valor de g inferior al primer nodo de closed-nodes.
-        ;(if (or (null (member current-node closed-nodes))
         (if (not-in-closed-nodes current-node closed-nodes)
             ;Expande el nodo actual e inserta los hijos en open-nodes, ordenados de
             ;acuerdo al criterio de comparación de strategy.
