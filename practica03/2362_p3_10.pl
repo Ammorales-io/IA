@@ -27,16 +27,18 @@ invierte([X|R], L) :- invierte(R, L1), concatena(L1, [X], L).
 %   Ejercicio 3  %
 %----------------%
 insert([X-P], [], [X-P]).
-insert([X-P], [A-Q|L1], R) :- P<Q, concatena([X-P], [A-Q|L1], R).
-insert([X-P], [A-Q|L1], [A-Q|L2]) :- insert([X-P], L1, L2).
+insert([X-P], [A-Q|Ls], R) :- P<Q, concatena([X-P], [A-Q|Ls], R).
+insert([X-P], [A-Q|Ls], [A-Q|Rs]) :- P>Q, insert([X-P], Ls, Rs).
 
 %------------------%
 %   Ejercicio 4.1  %
 %------------------%
-elem_count(X, [], 0).
+elem_count(_, [], 0).
 elem_count(X, [X|Ls], C1) :- elem_count(X, Ls, C), C1 is C + 1.
-elem_count(X, [_|Ls], C) :- elem_count(X, Ls, C).
+elem_count(X, [Y|Ls], C1) :- X\=Y, elem_count(X, Ls, C1).
 
 %------------------%
 %   Ejercicio 4.2  %
 %------------------%
+list_count([], [_|_], []).
+list_count([X|Ls], L2, [X-C|Rs]) :- elem_count(X, L2, C), list_count(Ls, L2, Rs).
