@@ -47,8 +47,6 @@
                     :nombre   'PETACULOS
                     :f-juego  #'f-j-nmx
                     :f-eval   #'mi-f-ev))
-
-
 ;;; ------------------------------------------------------------------------------------------
 ;;; FUNCIONES DE DEFINICION DE JUGADORES Y PARTIDAS DE PRUEBA
 ;;; ------------------------------------------------------------------------------------------
@@ -195,14 +193,14 @@
 ;;; Ajustes para facilitar el seguimiento paso a paso (pag. 11). Reduzcase el nivel de
 ;;; detalle cuando se vaya adquiriendo práctica.
 ;;; *debug-nmx* activa *verb* tambien para jugadores automaticos (normalmente desactivado).
-(setq *debug-level* 2)         ; Ajusta a 2 el nivel de detalle
-(setq *verb*        nil)         ; Activa comentarios para seguir la evolucion de la partida
-(setq *verjugada*   t)         ; Activa la visualizacion de jugadas
-(setq *vermarcador* t)         ; Activa la visualizacion del marcador
-(setq *debug-nmx*   t)         ; Desactiva debuging de negamax
+;(setq *debug-level* 2)         ; Ajusta a 2 el nivel de detalle
+;(setq *verb*        nil)         ; Activa comentarios para seguir la evolucion de la partida
+;(setq *verjugada*   t)         ; Activa la visualizacion de jugadas
+;(setq *vermarcador* t)         ; Activa la visualizacion del marcador
+;(setq *debug-nmx*   t)         ; Desactiva debuging de negamax
 
-(partida 1 2 (list *jdr-nmx-Regular* *jdr-nmx-Regular*))
-(partida 1 2 (list *jdr-aleatorio* *jdr-aleatorio*))
+;(partida 1 2 (list *jdr-nmx-Regular* *jdr-nmx-Regular*))
+;(partida 1 2 (list *jdr-aleatorio* *jdr-aleatorio*))
 
 ;;; Ajustes para facilitar el seguimiento paso a paso (pag. 11). Reduzcase el nivel de
 ;;; detalle cuando se vaya adquiriendo práctica.
@@ -243,3 +241,5 @@
 ;;;(partida 0 2 (list *jdr-humano*      *jdr-1st-opt*))
 ;;;(partida 0 2 (list *jdr-humano*      *jdr-last-opt*))
 ;;;(partida 0 2 (list *jdr-humano*      *jdr-human2*))
+(partida 0 2 (list *mi-jugador*      *jdr-nmxRegular*))
+
