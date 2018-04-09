@@ -1,8 +1,8 @@
-(defpackage :grupo62pareja1011F0904 	; se declara un paquete lisp que usa common-lisp
+(defpackage :grupo63pareja1011F0904 	; se declara un paquete lisp que usa common-lisp
   (:use :common-lisp :mancala) 		; y mancala, y exporta la función de evaluación
   (:export :heuristica :*alias*)) 	; heurística y un alias para el torneo
 
-(in-package grupo62pareja1011F0904)
+(in-package grupo63pareja1011F0904)
 
 (defun heuristica (estado) ;Preparamos la información del tablero
   (let ((kalaha-propio (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 6))
@@ -22,7 +22,7 @@
            10000)
        0)
      ;Valoramos la diferencia de fichas en Kathalas
-     (* (- kahala-propio kahala-contrario) 10)
+     (* (- kahala-propio kahala-contrario) 100)
      ;Valoramos los hoyos (cuantos menos semillas, mejor)
      (- (* hoyo-0 hoyo-0))
      (- (* hoyo-1 hoyo-1))
@@ -33,8 +33,7 @@
      (- (* hoyo-6 hoyo-6))
      ;Por último, valoramos si repetimos turno
      (if (estado-debe-pasar-turno estado)
-         1000
-       -1000))))
-)
+         3000
+       0))))
 
 (defvar *alias* 'PetaCabras)

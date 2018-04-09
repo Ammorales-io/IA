@@ -24,7 +24,7 @@
            10000)
        0)
      ;Valoramos la diferencia de fichas en Kathalas
-     (* (- kahala-propio kahala-contrario) 10)
+     (* (- kahala-propio kahala-contrario) 100)
      ;Valoramos los hoyos (cuantos menos semillas, mejor)
      (- (* hoyo-0 hoyo-0))
      (- (* hoyo-1 hoyo-1))
@@ -35,8 +35,8 @@
      (- (* hoyo-6 hoyo-6))
      ;Por último, valoramos si repetimos turno
      (if (estado-debe-pasar-turno estado)
-         1000
-       -1000))))
+         3000
+       0))))
 
             
   
