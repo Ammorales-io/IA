@@ -1,6 +1,6 @@
 (use-package 'mancala)
 
-(declaim #+sbcl(sb-ext:muffle-conditions style-warning))
+;(declaim #+sbcl(sb-ext:muffle-conditions style-warning))
 
 ;;; ------------------------------------------------------------------------------------------
 ;;; FUNCIONES DE DEFINICION DE JUGADORES Y PARTIDAS DE PRUEBA
@@ -11,17 +11,6 @@
 (defun f-j-nmx (estado profundidad-max f-eval)
 ;;;(negamax-a-b estado profundidad-max f-eval))
   (negamax estado profundidad-max f-eval))
-
-(defun mi-f-ev (estado) ;Preparamos la informaci�n del tablero
-	  (let ((kalaha-propio (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 6))
-        (kalaha-contrario (get-fichas (estado-tablero estado) (lado-contrario (estado-lado-sgte-jugador estado)) 6)))
-    (- kalaha-propio kalaha-contrario)))
-
-(setf *mi-jugador*
-	(make-jugador
-		:nombre 'Mi-jugador
-		:f-juego #'f-j-nmx
-		:f-eval #'mi-f-ev))
 
 ;;; f-juego controlado por un humano
 ;;; ------------------------------------------------------------------------------------------
@@ -159,14 +148,14 @@
 ;;; Ajustes para facilitar el seguimiento paso a paso (pag. 11). Reduzcase el nivel de
 ;;; detalle cuando se vaya adquiriendo práctica.
 ;;; *debug-nmx* activa *verb* tambien para jugadores automaticos (normalmente desactivado).
-;(setq *debug-level* 2)         ; Ajusta a 2 el nivel de detalle
-;(setq *verb*        nil)         ; Activa comentarios para seguir la evolucion de la partida
-;(setq *verjugada*   t)         ; Activa la visualizacion de jugadas
-;(setq *vermarcador* t)         ; Activa la visualizacion del marcador
-;(setq *debug-nmx*   t)         ; Desactiva debuging de negamax
+(setq *debug-level* 2)         ; Ajusta a 2 el nivel de detalle
+(setq *verb*        nil)         ; Activa comentarios para seguir la evolucion de la partida
+(setq *verjugada*   t)         ; Activa la visualizacion de jugadas
+(setq *vermarcador* t)         ; Activa la visualizacion del marcador
+(setq *debug-nmx*   t)         ; Desactiva debuging de negamax
 
-;(partida 1 2 (list *jdr-nmx-Regular* *jdr-nmx-Regular*))
-;(partida 1 2 (list *jdr-aleatorio* *jdr-aleatorio*))
+(partida 1 2 (list *jdr-nmx-Regular* *jdr-nmx-Regular*))
+(partida 1 2 (list *jdr-aleatorio* *jdr-aleatorio*))
 
 ;;; Ajustes para facilitar el seguimiento paso a paso (pag. 11). Reduzcase el nivel de
 ;;; detalle cuando se vaya adquiriendo práctica.
@@ -207,5 +196,3 @@
 ;;;(partida 0 2 (list *jdr-humano*      *jdr-1st-opt*))
 ;;;(partida 0 2 (list *jdr-humano*      *jdr-last-opt*))
 ;;;(partida 0 2 (list *jdr-humano*      *jdr-human2*))
-
-(partida 0 2 (list *mi-jugador*      *jdr-nmx-Bueno*))
