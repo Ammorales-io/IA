@@ -28,7 +28,7 @@
          ;Y la cantidad de fichas en cada hoyos (cuantos menos semillas, mejor)
          (-
           0
-          (* hoyo-0 hoyo-0 )
+          (* hoyo-0 hoyo-0 5)
           (* hoyo-1 hoyo-1 )
           (* hoyo-2 hoyo-2 )
           (* hoyo-3 hoyo-3 )
