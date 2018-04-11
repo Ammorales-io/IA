@@ -12,7 +12,7 @@
 ;;;(negamax-a-b estado profundidad-max f-eval))
   (negamax estado profundidad-max f-eval))
 
-(defun mi-f-ev (estado) ;Preparamos la información del tablero
+(defun mi-f-ev1 (estado) ;Preparamos la información del tablero
 (let ((kalaha-propio (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 6))
         (kalaha-contrario (get-fichas (estado-tablero estado) (lado-contrario (estado-lado-sgte-jugador estado)) 6))
         (hoyo-0 (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 0))
@@ -30,25 +30,51 @@
            10000)
        ;Si no se termina, valoramos si repetimos turno
        (if (estado-debe-pasar-turno estado)
-           9000 
+           (+(* (- kalaha-propio kalaha-contrario) 200) 9000) 
          ;Si no se pasa turno, valoramos la diferencia de fichas en Kathalas...
          (+(* (- kalaha-propio kalaha-contrario) 200)
          ;Y la cantidad de fichas en cada hoyos (cuantos menos semillas, mejor)
          (-
           0
-          (* hoyo-0 hoyo-0 5)
+          (* hoyo-0 hoyo-0 )
           (* hoyo-1 hoyo-1 )
           (* hoyo-2 hoyo-2 )
           (* hoyo-3 hoyo-3 )
           (* hoyo-4 hoyo-4 )
-          (* hoyo-5 hoyo-5 )
+          (* hoyo-5 hoyo-5 10)
           (* hoyo-6 hoyo-6 ))))))))
 
-(setf *mi-jugador*
+(setf *mi-jugador1*
 	(make-jugador
 		:nombre 'PETACULOS
 		:f-juego #'f-j-nmx
-		:f-eval #'mi-f-ev))
+		:f-eval #'mi-f-ev1))
+
+(defun mi-f-ev2 (estado) ;Preparamos la información del tablero
+(let (  (hoyo-0 (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 0))
+        (hoyo-1 (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 1))
+        (hoyo-2 (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 2))
+        (hoyo-3 (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 3))
+        (hoyo-4 (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 4))
+        (hoyo-5 (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 5))
+        (hoyo-6 (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 6)))
+    (+
+         ;Y la cantidad de fichas en cada hoyos (cuantos menos semillas, mejor)
+         (-
+          0
+          (* hoyo-0 1)
+          (* hoyo-1 5)
+          (* hoyo-2 25)
+          (* hoyo-3 125)
+          (* hoyo-4 625)
+          (* hoyo-5 3125)
+          (* hoyo-6 12000)))))
+
+(setf *mi-jugador2*
+	(make-jugador
+		:nombre 'PETACULOS_V2.0
+		:f-juego #'f-j-nmx
+		:f-eval #'mi-f-ev2))
 
 ;;; f-juego controlado por un humano
 ;;; ------------------------------------------------------------------------------------------
@@ -235,4 +261,5 @@
 ;;;(partida 0 2 (list *jdr-humano*      *jdr-last-opt*))
 ;;;(partida 0 2 (list *jdr-humano*      *jdr-human2*))
 
-(partida 0 2 (list *mi-jugador*      *jdr-nmx-Bueno*))
+(partida 0 2 (list *mi-jugador1*      *jdr-last-opt*))
+;(partida 0 2 (list *mi-jugador1*      *mi-jugador2*))

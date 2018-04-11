@@ -1,8 +1,8 @@
-(defpackage :grupo63pareja1031F1004 	; se declara un paquete lisp que usa common-lisp
+(defpackage :grupo63pareja1031F1104 	; se declara un paquete lisp que usa common-lisp
   (:use :common-lisp :mancala) 		; y mancala, y exporta la función de evaluación
   (:export :heuristica :*alias*)) 	; heurística y un alias para el torneo
 
-(in-package grupo63pareja1031F1004)
+(in-package grupo63pareja1031F1104)
 
 (defun heuristica (estado) ;Preparamos la información del tablero
   (let ((kalaha-propio (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 6))
@@ -10,10 +10,10 @@
     (if (juego-terminado-p estado)
         (if (< kalaha-propio kalaha-contrario)
             -1
-          102)
+          1002)
       (if (estado-debe-pasar-turno estado)
-          101
-        (random 100)))))
+          1001
+        (random 1000)))))
 
 
-(defvar *alias* 'Cifuentes)
+(defvar *alias* '|Debuguear_con_printfs|)
