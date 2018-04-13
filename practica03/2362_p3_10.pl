@@ -63,5 +63,10 @@ encode_elem(X, R, tree(_, tree(V, _, _), _)) :- X = V, R = [0].
 encode_elem(X, R, tree(_, _, tree(V, _, _))) :- X = V, R = [1]. 
 encode_elem(X, [R1|R2], tree(_, _, tree(V, N1, N2))) :- X \= N2, N2 \= nil, R1 = 1, encode_elem(X, R2, tree(V, N1, N2)).
 
+%-----------------%
+%   Ejercicio 7.2 %
+%-----------------%
+encode_list([], [], _).
+encode_list([X|RL], [R1|R2], T) :- encode_elem(X, R1, T), encode_list(RL, R2, T).
 
-
+encode_list([a, a, d, b, a, c], X, tree(1, tree(a, nil, nil), tree(1, tree(b, nil, nil), tree(1, tree(c, nil, nil), tree(d, nil, nil))))).
