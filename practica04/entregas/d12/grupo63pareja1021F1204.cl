@@ -38,4 +38,4 @@
 
 
 
-(defvar *alias* '|PetaCabras_v1.2b)
+(defvar *alias* '|Debuguear_mediante_printfs|)

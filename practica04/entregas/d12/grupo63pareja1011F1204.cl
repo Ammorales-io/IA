@@ -22,19 +22,18 @@
            10000)
        ;Si no se termina, valoramos si repetimos turno
        (if (estado-debe-pasar-turno estado)
-           (+(* (- kalaha-propio kalaha-contrario) 200) 9000) 
+           (+(* kalaha-propio 200) 9000) 
          ;Si no se pasa turno, valoramos la diferencia de fichas en Kathalas...
-         (+(* (- kalaha-propio kalaha-contrario) 200)
+         (+(* kalaha-propio 200)
          ;Y la cantidad de fichas en cada hoyos (cuantos menos semillas, mejor)
          (-
           0
           (* hoyo-0 hoyo-0 )
           (* hoyo-1 hoyo-1 )
-          (* hoyo-2 hoyo-2 )
+          (* hoyo-2 hoyo-2 10)
           (* hoyo-3 hoyo-3 )
           (* hoyo-4 hoyo-4 )
-          (* hoyo-5 hoyo-5 10)
-          (* hoyo-6 hoyo-6 ))))))))
-     
+          (* hoyo-5 hoyo-5 )
+          (* hoyo-6 hoyo-6 ))))))))     
 
-(defvar *alias* '|PetaCabras_v1.2a|)
+(defvar *alias* '|Dolor_al_orinar|)
