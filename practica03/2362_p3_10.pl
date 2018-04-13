@@ -52,7 +52,16 @@ sort_list([X-P|L1], L3) :- sort_list(L1, L2), insert([X-P], L2, L3).
 %----------------%
 %   Ejercicio 6  %
 %----------------%
-build_tree([], tree(nil, nil, nil)).
-build_tree([X], tree(X, nil, nil).
-build_tree([X|RL], RE) :- build_tree(X, N) 
+build_tree([X-_], tree(X, nil, nil)).
+build_tree([X-P|RL], tree(1, L1, L2)) :- RL \= [], build_tree([X-P], L1), build_tree(RL, L2). 
+
+%-----------------%
+%   Ejercicio 7.1 %
+%-----------------%
+encode_elem(_, [], tree(_, _, nil)).
+encode_elem(X, R, tree(_, tree(V, _, _), _)) :- X = V, R = [0].
+encode_elem(X, R, tree(_, _, tree(V, _, _))) :- X = V, R = [1]. 
+encode_elem(X, [R1|R2], tree(_, _, tree(V, N1, N2))) :- X \= N2, N2 \= nil, R1 = 1, encode_elem(X, R2, tree(V, N1, N2)).
+
+
 
