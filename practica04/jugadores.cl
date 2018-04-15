@@ -13,8 +13,7 @@
   (negamax estado profundidad-max f-eval))
 
 (defun mi-f-ev1 (estado) ;Preparamos la información del tablero
-(let (
-		(puntuacion-propia (suma-fila (estado-tablero estado) (estado-lado-sgte-jugador estado)))
+(let ((puntuacion-propia (suma-fila (estado-tablero estado) (estado-lado-sgte-jugador estado)))
 		(puntuacion-contrario (suma-fila (estado-tablero estado) (lado-contrario (estado-lado-sgte-jugador estado))))
 		(kalaha-propio (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 6))
         (kalaha-contrario (get-fichas (estado-tablero estado) (lado-contrario (estado-lado-sgte-jugador estado)) 6))
@@ -35,17 +34,16 @@
        (if (estado-debe-pasar-turno estado)
            9000 
          ;Si no se pasa turno, valoramos la diferencia de fichas en Kathalas...
-         (+(* (- kalaha-propio kalaha-contrario) 200)
+         (+ ;(* (- kalaha-propio kalaha-contrario) 200)
          ;Y la cantidad de fichas en cada hoyos (cuantos menos semillas, mejor)
          (-
           0
           (* hoyo-0 hoyo-0 )
           (* hoyo-1 hoyo-1 )
           (* hoyo-2 hoyo-2 )
-          (* hoyo-3 hoyo-3 )
-          (* hoyo-4 hoyo-4 5)
-          (* hoyo-5 hoyo-5 10)
-          (* hoyo-6 hoyo-6 ))))))))
+          (* hoyo-3 hoyo-3 5)
+          (* hoyo-4 hoyo-4 10)
+          (* hoyo-5 hoyo-5 20))))))))
 
 (setf *mi-jugador1*
 	(make-jugador
@@ -54,9 +52,9 @@
 		:f-eval #'mi-f-ev1))
 
 (defun mi-f-ev2 (estado) ;Preparamos la información del tablero
- (let (
-(puntuacion-propia (suma-fila (estado-tablero estado) (estado-lado-sgte-jugador estado)))
-		(puntuacion-contrario (suma-fila (estado-tablero estado) (lado-contrario (estado-lado-sgte-jugador estado))))(kalaha-propio (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 6))
+(let ((puntuacion-propia (suma-fila (estado-tablero estado) (estado-lado-sgte-jugador estado)))
+		(puntuacion-contrario (suma-fila (estado-tablero estado) (lado-contrario (estado-lado-sgte-jugador estado))))
+		(kalaha-propio (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 6))
         (kalaha-contrario (get-fichas (estado-tablero estado) (lado-contrario (estado-lado-sgte-jugador estado)) 6))
         (hoyo-0 (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 0))
         (hoyo-1 (get-fichas (estado-tablero estado) (estado-lado-sgte-jugador estado) 1))
@@ -75,17 +73,16 @@
        (if (estado-debe-pasar-turno estado)
            9000 
          ;Si no se pasa turno, valoramos la diferencia de fichas en Kathalas...
-         (+(* (- kalaha-propio kalaha-contrario) 200)
+         (+ (* (- kalaha-propio kalaha-contrario) 200)
          ;Y la cantidad de fichas en cada hoyos (cuantos menos semillas, mejor)
          (-
           0
-          (* hoyo-0 hoyo-0 hoyo-0 )
-          (* hoyo-1 hoyo-1 hoyo-1 )
-          (* hoyo-2 hoyo-2 hoyo-2 )
-          (* hoyo-3 hoyo-3 hoyo-3 )
-          (* hoyo-4 hoyo-4 hoyo-4 5)
-          (* hoyo-5 hoyo-5 hoyo-5 10)
-          (* hoyo-6 hoyo-6 hoyo-6 ))))))))
+          (* hoyo-0 hoyo-0 )
+          (* hoyo-1 hoyo-1 )
+          (* hoyo-2 hoyo-2 )
+          (* hoyo-3 hoyo-3 5)
+          (* hoyo-4 hoyo-4 10)
+          (* hoyo-5 hoyo-5 20))))))))
 
 (setf *mi-jugador2*
 	(make-jugador
@@ -250,6 +247,7 @@
 
 ;;; Partida entre dos humanos a partir de una posicion determinada para analisis detallado
 ;;; Se fuerza la posicion de inicio para jugar a partir de ella (ejemplo Pag.5 del enunciado)
+;;; CUIDADO, si se descomentan estas lineas la posicion inicial cambia y el juego puede no funcionar bien.
 ;;;(setq mi-posicion (list '(1 0 1 3 2 4 0) (reverse '(12 0 3 5 2 1 2))))
 ;;;(setq mi-posicion (list '(1 0 1 3 2 4 7) (reverse '(5 0 3 5 2 1 2))))
 ;;;(setq mi-posicion (list '(0 3 1 1 1 8 8) (reverse '(4 0 8 2 0 0 0))))
@@ -278,5 +276,7 @@
 ;;;(partida 0 2 (list *jdr-humano*      *jdr-last-opt*))
 ;;;(partida 0 2 (list *jdr-humano*      *jdr-human2*))
 
+;(partida 0 2 (list *mi-jugador1*      *jdr-nmx-Regular*))
+;(partida 0 2 (list *mi-jugador1*      *jdr-nmx-Bueno*))
 ;(partida 0 2 (list *mi-jugador1*      *jdr-last-opt*))
-(partida 0 2 (list *mi-jugador1*      *mi-jugador2*))
+(partida 1 2 (list *mi-jugador1*      *mi-jugador2*))
