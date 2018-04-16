@@ -37,4 +37,4 @@
           (* hoyo-4 hoyo-4 10)
           (* hoyo-5 hoyo-5 20))))))))
 
-(defvar *alias* '|last-opt-pero-mejor|)
+(defvar *alias* '|PetaCabras_v1.LastOPT|)
