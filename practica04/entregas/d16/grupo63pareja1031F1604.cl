@@ -36,4 +36,4 @@
                  (* hoyo-4-contrario hoyo-4-contrario)
                  (* hoyo-5-contrario hoyo-5-contrario))))))))
 
-(defvar *alias* '|827|)
+(defvar *alias* '|Linea-827|)
