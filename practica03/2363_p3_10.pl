@@ -73,4 +73,5 @@ encode_list([X|RL], [R1|R2], T) :- encode_elem(X, R1, T), encode_list(RL, R2, T)
 %   Ejercicio 8  %
 %----------------%
 dictionary(X) :- X = [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z].
+
 encode(L1, L2) :- dictionary(D), list_count(D, L1, RLC), sort_list(RLC, RSL), invierte(RSL, RI), build_tree(RI, T), encode_list(L1, L2, T).
