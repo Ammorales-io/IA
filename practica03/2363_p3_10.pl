@@ -58,10 +58,9 @@ build_tree([X-P|RL], tree(1, L1, L2)) :- RL \= [], build_tree([X-P], L1), build_
 %-----------------%
 %   Ejercicio 7.1 %
 %-----------------%
-encode_elem(_, [], tree(_, _, nil)).
-encode_elem(X, R, tree(_, tree(V, _, _), _)) :- X = V, R = [0].
-encode_elem(X, R, tree(_, _, tree(V, _, _))) :- X = V, R = [1]. 
-encode_elem(X, [R1|R2], tree(_, _, tree(V, N1, N2))) :- X \= N2, N2 \= nil, R1 = 1, encode_elem(X, R2, tree(V, N1, N2)).
+encode_elem(X, R, tree(_, tree(X, _, _), _)) :- R = [0].
+encode_elem(X, R, tree(_, _, tree(X, _, _))) :- R = [1]. 
+encode_elem(X, [R1|R2], tree(_, _, tree(V, N1, N2))) :- X \= V, R1 = 1, encode_elem(X, R2, tree(V, N1, N2)).
 
 %-----------------%
 %   Ejercicio 7.2 %
