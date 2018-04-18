@@ -12,7 +12,7 @@
 %   Ejercicio 1  %
 %----------------%
 pertenece_m(X, [X|_]) :- X \= [_|_].
-pertenece_m(X, [L|Rs]) :- pertenece_m(X, L); pertenece_m(X, Rs).
+pertenece_m(X, [L1|Rs]) :- pertenece_m(X, L1); pertenece_m(X, Rs).
 
 %----------------%
 %   Ejercicio 2  %
