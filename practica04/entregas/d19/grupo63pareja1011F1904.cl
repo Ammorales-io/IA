@@ -1,8 +1,8 @@
-(defpackage :grupo63pareja1031F1804 	; se declara un paquete lisp que usa common-lisp
+(defpackage :grupo63pareja1011F1904 	; se declara un paquete lisp que usa common-lisp
   (:use :common-lisp :mancala) 		; y mancala, y exporta la función de evaluación
   (:export :heuristica :*alias*)) 	; heurística y un alias para el torneo
 
-(in-package grupo63pareja1031F1804)
+(in-package grupo63pareja1011F1904)
 
 (defun heuristica (estado) ;Preparamos la información del tablero  
   (let ((puntuacion-propia (suma-fila (estado-tablero estado) (estado-lado-sgte-jugador estado)))
